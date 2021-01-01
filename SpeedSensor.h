@@ -38,28 +38,32 @@ public:
     SpeedSensor(MicroBit &_uBit);
 
 private:
-    // クランクセンサーの信号取得時間のリスト（マイクロ秒=10の−6乗秒）
+    // クランクセンサー信号の計測時間のリスト（単位: マイクロ秒 - 1秒/1000000）
     std::queue<uint64_t> intervalList;
-    // 平均速度を算出する計測数
+    // 計測時間の数
     uint32_t intervalListSize;
-    // 最新の平均10倍速度
-    uint32_t lastSpeed10Avg;
-    // 最新の平均クランク回転数
+    // 最新のインターバル時間（単位: マイクロ秒 - 1秒/1000000）
+    uint32_t lastIntervalTime;
+    // 最新の速度（単位： km/h の 100倍）
+    uint32_t lastSpeed100;
+    // 最新の平均クランク回転数（単位：rpm）
     uint32_t lastCadence;
 
 public:
-    // 平均速度を算出する計測数
+    // 速度とクランク回転数を算出する計測時間の数を設定する
     void setIntervalListSize(uint32_t);
 
-    // クランクセンサー信号を取得した時間を内部でセットする。
-    void setCurrentTimeOnCrankSignal(void);
+    // クランクセンサー信号の計測時間を保持する。
+    void setCurrentTimeOnCrankSignal(uint64_t);
 
     // 速度とクランク回転数を再計算する（最新化）
     void update();
 
-    // 平均10倍速度を取得する（単位： km/h の 10倍）
-    uint32_t getSpeed10Avg(void);
-    // 平均クランク回転数を取得する（単位：rpm）
+    // インターバル時間を取得する（単位: マイクロ秒 - 1秒/1000000）
+    uint32_t getIntervalTime(void);
+    // 速度を取得する（単位： km/h の 100倍）
+    uint32_t getSpeed100(void);
+    // クランク回転数を取得する（単位：rpm）
     uint32_t getCadence(void);
 
 };

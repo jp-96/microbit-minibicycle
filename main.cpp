@@ -29,30 +29,39 @@ SOFTWARE.
 MicroBit uBit;
 SpeedSensor sensor(uBit);
 
-//
-// Print details of all events received to the serial port.
-// Default settings are 115200 baud, 8N1 over the USB interface.
-//
+// Button Event
 void onButton(MicroBitEvent e)
 {
     if ((e.source == MICROBIT_ID_BUTTON_A) && (e.value == MICROBIT_BUTTON_EVT_CLICK))
     {
-        sensor.setCurrentTimeOnCrankSignal();
+        sensor.setCurrentTimeOnCrankSignal(e.timestamp);
     }
 }
+
+// Sensor Event
+uint64_t lastSensorTimestamp=0;
+void onSensor(MicroBitEvent e) 
+{
+    if ((e.timestamp-lastSensorTimestamp)>(uint32_t)100000)
+    {
+        lastSensorTimestamp = e.timestamp;
+        sensor.setCurrentTimeOnCrankSignal(lastSensorTimestamp);
+    }
+ }
 
 // ▼fiberの使い方
 // https://www.instructables.com/BBC-Microbit-C-Getting-Started/
 void tickTimer()
 {
-    uBit.serial.printf("Start.\r\n");
+    uBit.serial.printf("Start tickTimer().\r\n");
     while(1)
     {
         unsigned long sysTime=uBit.systemTime();
         
         sensor.update();
+        sensor.getIntervalTime();
         sensor.getCadence();
-        sensor.getSpeed10Avg();
+        sensor.getSpeed100();
 
         fiber_sleep(((unsigned long)1000)-(uBit.systemTime()-sysTime));
     }
@@ -60,15 +69,15 @@ void tickTimer()
 
 int main()
 {
-    // Initialise the micro:bit runtime.
     uBit.init();
 
-    // Insert your code here!
+    // Register for Button Events on Button(A)
     uBit.messageBus.listen(MICROBIT_ID_BUTTON_A, MICROBIT_EVT_ANY, onButton);
+    // Register for Sensor Events on P2.
+    uBit.messageBus.listen(MICROBIT_ID_IO_P2, MICROBIT_PIN_EVT_RISE , onSensor);
+    uBit.io.P2.eventOn(MICROBIT_PIN_EVENT_ON_EDGE);
+    // tickTimer
     create_fiber(tickTimer);
 
-    // If main exits, there may still be other fibers running or registered event handlers etc.
-    // Simply release this fiber, which will mean we enter the scheduler. Worse case, we then
-    // sit in the idle task forever, in a power efficient sleep.
     release_fiber();
 }
