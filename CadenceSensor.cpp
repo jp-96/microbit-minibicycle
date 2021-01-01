@@ -23,34 +23,33 @@ SOFTWARE.
 */
 
 #include "MicroBit.h"
-#include "SpeedSensor.h"
+#include "CadenceSensor.h"
 
 #ifndef INTERVAL_LIST_SIZE
 #define INTERVAL_LIST_SIZE 3
 #endif
 
-#ifndef K_SPEED
-#define K_SPEED 1800000000
+#ifndef SPEED_WATCHDOG_currentTime
+#define SPEED_WATCHDOG_currentTime 4000000
 #endif
 
 #ifndef K_CADENCE
 #define K_CADENCE 60000000
 #endif
 
-
-#ifndef SPEED_WATCHDOG_currentTime
-#define SPEED_WATCHDOG_currentTime 4000000
+#ifndef K_SPEED
+#define K_SPEED 1800000000
 #endif
 
 // コンストラクタ
-SpeedSensor::SpeedSensor(MicroBit &_uBit)
+CadenceSensor::CadenceSensor(MicroBit &_uBit)
     : uBit(_uBit)
 {
     this->setIntervalListSize(INTERVAL_LIST_SIZE);
     this->update();
 }
 
-void SpeedSensor::setIntervalListSize(uint32_t size)
+void CadenceSensor::setIntervalListSize(uint32_t size)
 {
     if (size<2)
     {
@@ -59,7 +58,7 @@ void SpeedSensor::setIntervalListSize(uint32_t size)
     this->intervalListSize = size;
 }
 
-void SpeedSensor::setCurrentTimeOnCrankSignal(uint64_t currentTime)
+void CadenceSensor::setCurrentTimeOnCrankSignal(uint64_t currentTime)
 {
     this->intervalList.push(currentTime);
     if ((uint32_t)this->intervalList.size()>(this->intervalListSize))
@@ -67,22 +66,22 @@ void SpeedSensor::setCurrentTimeOnCrankSignal(uint64_t currentTime)
         this->intervalList.pop();
     }
 }
-uint32_t SpeedSensor::getIntervalTime(void)
+uint32_t CadenceSensor::getIntervalTime(void)
 {
     return this->lastIntervalTime;
 }
 
-uint32_t SpeedSensor::getSpeed100(void)
+uint32_t CadenceSensor::getSpeed100(void)
 {
     return this->lastSpeed100;
 }
 
-uint32_t SpeedSensor::getCadence(void)
+uint32_t CadenceSensor::getCadence(void)
 {
     return this->lastCadence;
 }
 
-void SpeedSensor::update()
+void CadenceSensor::update()
 {
     uint64_t currentTime = system_timer_current_time_us();
     if ((this->intervalList.size()>0) && ((currentTime - this->intervalList.back())>(uint64_t)SPEED_WATCHDOG_currentTime))
@@ -99,20 +98,21 @@ void SpeedSensor::update()
     {
         intervalNum = 0;
         intervalTotalTime = 0;
-        this->lastSpeed100 = 0;
+        this->lastIntervalTime = 0;
         this->lastCadence = 0;
+        this->lastSpeed100 = 0;
     }
     else
     {
         intervalNum = this->intervalList.size() - 1;
         intervalTotalTime = this->intervalList.back() - this->intervalList.front();
         this->lastIntervalTime = intervalTotalTime / intervalNum;
-        this->lastSpeed100 = (uint32_t)( (uint64_t)K_SPEED   / this->lastIntervalTime );
         this->lastCadence  = (uint32_t)( (uint64_t)K_CADENCE / this->lastIntervalTime );
+        this->lastSpeed100 = (uint32_t)( (uint64_t)K_SPEED   / this->lastIntervalTime );
     }
     
-    uBit.serial.printf("current, %d, num, %d, total, %d, tt, %d, spd, %d, cd, %d\r\n",
+    uBit.serial.printf("current, %d, num, %d, total, %d, tt, %d, cd, %d, spd, %d\r\n",
         (uint32_t)currentTime, (uint32_t)intervalNum, (uint32_t)intervalTotalTime,
-        this->lastIntervalTime, this->lastSpeed100, this->lastCadence);
+        this->lastIntervalTime, this->lastCadence, this->lastSpeed100);
 
 }

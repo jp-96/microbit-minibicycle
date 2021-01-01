@@ -24,10 +24,10 @@ SOFTWARE.
 */
 
 #include "MicroBit.h"
-#include "SpeedSensor.h"
+#include "CadenceSensor.h"
 
 MicroBit uBit;
-SpeedSensor sensor(uBit);
+CadenceSensor sensor(uBit);
 
 // Button Event
 void onButton(MicroBitEvent e)
