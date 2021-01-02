@@ -45,13 +45,6 @@ SOFTWARE.
   */
 #define MICROBIT_INDOOR_BIKE_MINI_EVT_DATA_UPDATE              1
 
-enum CrankSensorPin
-{
-    IO_P0,
-    IO_P1,
-    IO_P2
-};
-
 class MicroBitIndoorBikeMiniSensor : public MicroBitComponent
 {
 private:
@@ -66,7 +59,7 @@ private:
 
 public:
     // Constructor.
-    MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, CrankSensorPin pin = IO_P2, uint16_t id = CUSTOM_EVENT_ID_INDOORBIKE_MINI);
+    MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, uint16_t id = CUSTOM_EVENT_ID_INDOORBIKE_MINI);
 
     /**
       * The system timer will call this member function once the component has been added to

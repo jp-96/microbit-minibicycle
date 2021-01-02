@@ -25,7 +25,7 @@ SOFTWARE.
 #include "MicroBitIndoorBikeMiniSensor.h"
 
 // コンストラクタ
-MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, CrankSensorPin pin, uint16_t id)
+MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, uint16_t id)
     : uBit(_uBit)
 {
     this->id = id;
