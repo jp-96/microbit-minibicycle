@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2021 jp-rad
+Copyright (c) 2021 jp-96
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,47 +24,36 @@ SOFTWARE.
 */
 
 #include "MicroBit.h"
-#include "CadenceSensor.h"
+#include "indoorbike-mini/driver/MicroBitIndoorBikeMiniSensor.h"
 
 MicroBit uBit;
-CadenceSensor sensor(uBit);
+MicroBitIndoorBikeMiniSensor sensor(uBit);
 
 // Button Event
 void onButton(MicroBitEvent e)
 {
+    //uBit.serial.printf("onButton()\r\n");
     if ((e.source == MICROBIT_ID_BUTTON_A) && (e.value == MICROBIT_BUTTON_EVT_CLICK))
     {
-        sensor.setCurrentTimeOnCrankSignal(e.timestamp);
+        sensor.onCrankSensor(e);
     }
 }
 
-// Sensor Event
-uint64_t lastSensorTimestamp=0;
-void onSensor(MicroBitEvent e) 
+// Crank Sensor Event (P2, RISE)
+void onCrankSensor(MicroBitEvent e) 
 {
-    if ((e.timestamp-lastSensorTimestamp)>(uint32_t)100000)
-    {
-        lastSensorTimestamp = e.timestamp;
-        sensor.setCurrentTimeOnCrankSignal(lastSensorTimestamp);
-    }
- }
+    //uBit.serial.printf("onSensor()\r\n");
+    sensor.onCrankSensor(e);
+}
 
-// ▼fiberの使い方
-// https://www.instructables.com/BBC-Microbit-C-Getting-Started/
-void tickTimer()
+void onSensorUpdate(MicroBitEvent e)
 {
-    uBit.serial.printf("Start tickTimer().\r\n");
-    while(1)
-    {
-        unsigned long sysTime=uBit.systemTime();
-        
-        sensor.update();
-        sensor.getIntervalTime();
-        sensor.getCadence();
-        sensor.getSpeed100();
-
-        fiber_sleep(((unsigned long)1000)-(uBit.systemTime()-sysTime));
-    }
+    //uBit.serial.printf("onUpdate()\r\n");
+    uBit.serial.printf("T, %d, C, %d, S, %d\r\n"
+        , sensor.getIntervalTime()
+        , sensor.getCadence()
+        , sensor.getSpeed100()
+    );
 }
 
 int main()
@@ -73,11 +62,13 @@ int main()
 
     // Register for Button Events on Button(A)
     uBit.messageBus.listen(MICROBIT_ID_BUTTON_A, MICROBIT_EVT_ANY, onButton);
+    
     // Register for Sensor Events on P2.
-    uBit.messageBus.listen(MICROBIT_ID_IO_P2, MICROBIT_PIN_EVT_RISE , onSensor);
+    uBit.messageBus.listen(MICROBIT_ID_IO_P2, MICROBIT_PIN_EVT_RISE , onCrankSensor);
     uBit.io.P2.eventOn(MICROBIT_PIN_EVENT_ON_EDGE);
-    // tickTimer
-    create_fiber(tickTimer);
+    // IdleTick
+    uBit.addIdleComponent(&sensor);
+    uBit.messageBus.listen(CUSTOM_EVENT_ID_INDOORBIKE_MINI, MICROBIT_EVT_ANY, onSensorUpdate);
 
     release_fiber();
 }
