@@ -26,6 +26,11 @@ SOFTWARE.
 #include "MicroBit.h"
 #include "indoorbike-mini/driver/MicroBitIndoorBikeMiniSensor.h"
 
+#define BLE_DEVICE_LOCAL_NAME "FTMS:BIT"
+#ifndef BLE_DEVICE_LOCAL_NAME_CHENGE
+#define BLE_DEVICE_LOCAL_NAME_CHENGE 1
+#endif /* #ifndef BLE_DEVICE_LOCAL_NAME_CHENGE */
+
 MicroBit uBit;
 MicroBitIndoorBikeMiniSensor sensor(uBit);
 
@@ -53,6 +58,13 @@ void onSensorUpdate(MicroBitEvent e)
 int main()
 {
     uBit.init();
+    
+    // BLE Appearance and LOCAL_NAME
+    uBit.ble->gap().accumulateAdvertisingPayload(GapAdvertisingData::GENERIC_CYCLING);
+    if (BLE_DEVICE_LOCAL_NAME_CHENGE)
+    {
+        uBit.ble->gap().accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LOCAL_NAME, (const uint8_t *)BLE_DEVICE_LOCAL_NAME, sizeof(BLE_DEVICE_LOCAL_NAME)-1);
+    }
 
     // Register for Button Events on Button(A)
     uBit.messageBus.listen(MICROBIT_ID_BUTTON_A, MICROBIT_EVT_ANY, onButton);

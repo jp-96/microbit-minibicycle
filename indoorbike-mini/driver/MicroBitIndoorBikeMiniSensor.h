@@ -54,7 +54,6 @@ enum MicrobitInddorBikeMiniCrankSensorPin
 };
 
 static const int MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVENT_IDs[] = {MICROBIT_ID_IO_P0, MICROBIT_ID_IO_P1, MICROBIT_ID_IO_P2};
-static MicroBitComponent* pIndoorBikeMiniSensor[] = {NULL, NULL, NULL};
 
 class MicroBitIndoorBikeMiniSensor : public MicroBitComponent
 {
@@ -67,46 +66,6 @@ private:
     static const uint64_t MAX_CRANK_INTERVAL_TIME_US = 4000000;
     static const uint64_t K_CRANK_CADENCE = 60000000;
     static const uint64_t K_CRANK_SPEED = 1800000000;
-
-private:
-    
-    static int setMicroBitIndoorBikeMiniSenorInstance(MicrobitInddorBikeMiniCrankSensorPin pin, MicroBitIndoorBikeMiniSensor* pInstance)
-    {
-        if (pIndoorBikeMiniSensor[pin]!=NULL)
-        {
-            return MICROBIT_NO_RESOURCES;
-        }
-        pIndoorBikeMiniSensor[pin] = pInstance;
-        return MICROBIT_OK;
-    }
-    static MicroBitIndoorBikeMiniSensor* removeMicroBitIndoorBikeMiniSenorInstance(MicrobitInddorBikeMiniCrankSensorPin pin)
-    {
-        MicroBitIndoorBikeMiniSensor* p = (MicroBitIndoorBikeMiniSensor*)pIndoorBikeMiniSensor[pin];
-        pIndoorBikeMiniSensor[pin] = NULL;
-        return p;
-    }
-    static void onCrankSensorWrapper(MicroBitEvent e)
-    {
-        int pin;
-        switch (e.source)
-        {
-        case MICROBIT_ID_IO_P0:
-            pin = EDGE_P0;
-            break;
-        
-        case MICROBIT_ID_IO_P1:
-            pin = EDGE_P1;
-            break;
-
-        default: // MICROBIT_ID_IO_P1
-            pin = EDGE_P2;
-            break;
-        }
-        if (pIndoorBikeMiniSensor[pin] != NULL)
-        {
-            ((MicroBitIndoorBikeMiniSensor*)pIndoorBikeMiniSensor[pin])->onCrankSensor(e);
-        }
-    }
 
 public:
     // Constructor.

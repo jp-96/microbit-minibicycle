@@ -35,9 +35,9 @@ MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, Micr
     this->updateSampleTimestamp=0;
     this->nextSensorTimestamp=0;
 
-    MicroBitIndoorBikeMiniSensor::setMicroBitIndoorBikeMiniSenorInstance(pin, this);
-    this->uBit.messageBus.listen(MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVENT_IDs[pin]
-        , MICROBIT_PIN_EVT_RISE, MicroBitIndoorBikeMiniSensor::onCrankSensorWrapper);
+    if (EventModel::defaultEventBus)
+        EventModel::defaultEventBus->listen(MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVENT_IDs[pin], MICROBIT_PIN_EVT_RISE
+            , this, &MicroBitIndoorBikeMiniSensor::onCrankSensor, MESSAGE_BUS_LISTENER_IMMEDIATE);
     switch (pin)
     {
     case EDGE_P0:
@@ -73,6 +73,11 @@ void MicroBitIndoorBikeMiniSensor::idleTick()
 
 void MicroBitIndoorBikeMiniSensor::setCurrentTimeOnCrankSignal(uint64_t currentTime)
 {
+    if (this->intervalList.size()==0)
+    {
+        // 初回から、回転数を表示させる。
+        this->intervalList.push(currentTime-MAX_CRANK_INTERVAL_TIME_US);
+    }
     this->intervalList.push(currentTime);
     if ((uint32_t)this->intervalList.size()>(this->CRANK_INTERVAL_LIST_SIZE))
     {

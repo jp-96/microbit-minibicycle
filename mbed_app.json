@@ -1,0 +1,9 @@
+{
+    "macros": [
+        "MICROBIT_BLE_OPEN=1",
+        "MICROBIT_BLE_DFU_SERVICE=0",
+        "MICROBIT_BLE_EVENT_SERVICE=0",
+
+        "MICROBIT_SD_GATT_TABLE_SIZE=0x340"
+    ]
+}
