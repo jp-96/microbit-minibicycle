@@ -38,7 +38,18 @@ MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, Micr
     MicroBitIndoorBikeMiniSensor::setMicroBitIndoorBikeMiniSenorInstance(pin, this);
     this->uBit.messageBus.listen(MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVENT_IDs[pin]
         , MICROBIT_PIN_EVT_RISE, MicroBitIndoorBikeMiniSensor::onCrankSensorWrapper);
-    uBit.io.P2.eventOn(MICROBIT_PIN_EVENT_ON_EDGE);
+    switch (pin)
+    {
+    case EDGE_P0:
+        uBit.io.P0.eventOn(MICROBIT_PIN_EVENT_ON_EDGE);
+        break;
+    case EDGE_P1:
+        uBit.io.P1.eventOn(MICROBIT_PIN_EVENT_ON_EDGE);
+        break;
+    default:    // EDGE_P2
+        uBit.io.P2.eventOn(MICROBIT_PIN_EVENT_ON_EDGE);
+        break;
+    }
     
 }
 
