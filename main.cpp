@@ -27,7 +27,7 @@ SOFTWARE.
 #include "indoorbike-mini/driver/MicroBitIndoorBikeMiniSensor.h"
 
 MicroBit uBit;
-MicroBitIndoorBikeMiniSensor(uBit);
+MicroBitIndoorBikeMiniSensor sensor(uBit);
 
 // Button Event
 void onButton(MicroBitEvent e)
@@ -35,7 +35,7 @@ void onButton(MicroBitEvent e)
     //uBit.serial.printf("onButton()\r\n");
     if ((e.source == MICROBIT_ID_BUTTON_A) && (e.value == MICROBIT_BUTTON_EVT_CLICK))
     {
-        sensor->onCrankSensor(e);
+        sensor.onCrankSensor(e);
     }
 }
 
@@ -43,9 +43,9 @@ void onSensorUpdate(MicroBitEvent e)
 {
     //uBit.serial.printf("onUpdate()\r\n");
     uBit.serial.printf("T, %d, C, %d, S, %d\r\n"
-        , sensor->getIntervalTime()
-        , sensor->getCadence()
-        , sensor->getSpeed100()
+        , sensor.getIntervalTime()
+        , sensor.getCadence()
+        , sensor.getSpeed100()
     );
 }
 
@@ -58,7 +58,7 @@ int main()
     uBit.messageBus.listen(MICROBIT_ID_BUTTON_A, MICROBIT_EVT_ANY, onButton);
     
     // IdleTick
-    uBit.addIdleComponent(sensor);
+    uBit.addIdleComponent(&sensor);
     uBit.messageBus.listen(CUSTOM_EVENT_ID_INDOORBIKE_MINI, MICROBIT_EVT_ANY, onSensorUpdate);
 
     release_fiber();
