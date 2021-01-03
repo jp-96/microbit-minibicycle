@@ -30,7 +30,7 @@ MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, Micr
 {
     this->id = id;
     this->lastIntervalTime=0;
-    this->lastCadence=0;
+    this->lastCadence2=0;
     this->lastSpeed100=0;
     this->updateSampleTimestamp=0;
     this->nextSensorTimestamp=0;
@@ -71,6 +71,11 @@ void MicroBitIndoorBikeMiniSensor::idleTick()
     this->update();
 }
 
+uint16_t MicroBitIndoorBikeMiniSensor::getId(void)
+{
+    return this->id;
+}
+
 void MicroBitIndoorBikeMiniSensor::setCurrentTimeOnCrankSignal(uint64_t currentTime)
 {
     if (this->intervalList.size()==0)
@@ -94,9 +99,9 @@ uint32_t MicroBitIndoorBikeMiniSensor::getSpeed100(void)
     return this->lastSpeed100;
 }
 
-uint32_t MicroBitIndoorBikeMiniSensor::getCadence(void)
+uint32_t MicroBitIndoorBikeMiniSensor::getCadence2(void)
 {
-    return this->lastCadence;
+    return this->lastCadence2;
 }
 
 void MicroBitIndoorBikeMiniSensor::update()
@@ -130,7 +135,7 @@ void MicroBitIndoorBikeMiniSensor::update()
             intervalNum = 0;
             periodTime = 0;
             this->lastIntervalTime = 0;
-            this->lastCadence = 0;
+            this->lastCadence2 = 0;
             this->lastSpeed100 = 0;
         }
         else
@@ -138,7 +143,7 @@ void MicroBitIndoorBikeMiniSensor::update()
             intervalNum = this->intervalList.size() - 1;
             periodTime = this->intervalList.back() - this->intervalList.front();
             this->lastIntervalTime = periodTime / intervalNum;
-            this->lastCadence  = (uint32_t)( this->K_CRANK_CADENCE / this->lastIntervalTime );
+            this->lastCadence2  = (uint32_t)( this->K_CRANK_CADENCE / this->lastIntervalTime );
             this->lastSpeed100 = (uint32_t)( this->K_CRANK_SPEED   / this->lastIntervalTime );
         }
         

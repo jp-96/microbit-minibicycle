@@ -26,6 +26,7 @@ SOFTWARE.
 #define MICROBIT_INDOOR_BIKE_MINI_SENSOR_H
 
 #include "MicroBit.h"
+#include "../IndoorBikeMini.h"
 #include <queue>
 
 /**
@@ -34,12 +35,6 @@ SOFTWARE.
 // Universal flags used as part of the status field
 // #define MICROBIT_COMPONENT_RUNNING		0x01
 #define MICROBIT_INDOOR_BIKE_MINI_ADDED_TO_IDLE              0x02
-
-static const uint16_t CUSTOM_EVENT_ID_BASE = 32768;
-
-#ifndef CUSTOM_EVENT_ID_INDOORBIKE_MINI
-#define CUSTOM_EVENT_ID_INDOORBIKE_MINI (CUSTOM_EVENT_ID_BASE+1)
-#endif /* #ifndef CUSTOM_EVENT_ID_INDOORBIKE_MINI */
 
 /**
   * Indoor Bike Mini events
@@ -64,8 +59,8 @@ private:
     static const uint64_t SENSOR_DATA_PACKET_PERIOD = 100000;
     static const uint64_t CRANK_INTERVAL_LIST_SIZE = 3;
     static const uint64_t MAX_CRANK_INTERVAL_TIME_US = 4000000;
-    static const uint64_t K_CRANK_CADENCE = 60000000;
-    static const uint64_t K_CRANK_SPEED = 1800000000;
+    static const uint64_t K_CRANK_CADENCE =  120000000;
+    static const uint64_t K_CRANK_SPEED   = 1800000000;
 
 public:
     // Constructor.
@@ -83,14 +78,17 @@ public:
       */
     virtual void idleTick();
 
+    // Event ID
+    uint16_t getId(void);
+
 private:
     // ケイデンスセンサー信号の計測時間のリスト（単位: マイクロ秒 - 1秒/1000000）
     std::queue<uint64_t> intervalList;
     
     // 最新のインターバル時間（単位: マイクロ秒 - 1秒/1000000）
     uint32_t lastIntervalTime;
-    // 最新のクランク回転数（単位：rpm）
-    uint32_t lastCadence;
+    // 最新のクランク回転数（単位：rpm の 2倍）
+    uint32_t lastCadence2;
     // 最新の速度（単位： km/h の 100倍）
     uint32_t lastSpeed100;
     
@@ -112,8 +110,8 @@ public:
 
     // インターバル時間を取得する（単位: マイクロ秒 - 1秒/1000000）
     uint32_t getIntervalTime(void);
-    // クランク回転数を取得する（単位：rpm）
-    uint32_t getCadence(void);
+    // クランク回転数を取得する（単位：rpm の 2倍）
+    uint32_t getCadence2(void);
     // 速度を取得する（単位： km/h の 100倍）
     uint32_t getSpeed100(void);
 
