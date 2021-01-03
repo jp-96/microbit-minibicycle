@@ -25,7 +25,7 @@ SOFTWARE.
 #include "MicroBitIndoorBikeMiniSensor.h"
 
 // コンストラクタ
-MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, uint16_t id)
+MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, MicrobitInddorBikeMiniCrankSensorPin pin, uint16_t id)
     : uBit(_uBit)
 {
     this->id = id;
@@ -34,6 +34,12 @@ MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, uint
     this->lastSpeed100=0;
     this->updateSampleTimestamp=0;
     this->nextSensorTimestamp=0;
+
+    MicroBitIndoorBikeMiniSensor::setMicroBitIndoorBikeMiniSenorInstance(pin, this);
+    this->uBit.messageBus.listen(MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVENT_IDs[pin]
+        , MICROBIT_PIN_EVT_RISE, MicroBitIndoorBikeMiniSensor::onCrankSensorWrapper);
+    uBit.io.P2.eventOn(MICROBIT_PIN_EVENT_ON_EDGE);
+    
 }
 
 /**

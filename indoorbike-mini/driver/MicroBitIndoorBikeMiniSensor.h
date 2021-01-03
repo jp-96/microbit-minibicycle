@@ -35,8 +35,9 @@ SOFTWARE.
 // #define MICROBIT_COMPONENT_RUNNING		0x01
 #define MICROBIT_INDOOR_BIKE_MINI_ADDED_TO_IDLE              0x02
 
-#ifndef CUSTOM_EVENT_ID_INDOORBIKE_MINI
 #define CUSTOM_EVENT_ID_USER (uint16_t)32768
+
+#ifndef CUSTOM_EVENT_ID_INDOORBIKE_MINI
 #define CUSTOM_EVENT_ID_INDOORBIKE_MINI ((uint16_t)(CUSTOM_EVENT_ID_USER+1))
 #endif /* #ifndef CUSTOM_EVENT_ID_INDOORBIKE_MINI */
 
@@ -44,6 +45,16 @@ SOFTWARE.
   * Indoor Bike Mini events
   */
 #define MICROBIT_INDOOR_BIKE_MINI_EVT_DATA_UPDATE              1
+
+enum MicrobitInddorBikeMiniCrankSensorPin
+{
+    EDGE_P0 = 0,
+    EDGE_P1 = 1,
+    EDGE_P2 = 2
+};
+
+static const int MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVENT_IDs[] = {MICROBIT_ID_IO_P0, MICROBIT_ID_IO_P1, MICROBIT_ID_IO_P2};
+static MicroBitComponent* indoorBikeMiniSensor = NULL;
 
 class MicroBitIndoorBikeMiniSensor : public MicroBitComponent
 {
@@ -57,9 +68,29 @@ private:
     static const uint64_t K_CRANK_CADENCE = 60000000;
     static const uint64_t K_CRANK_SPEED = 1800000000;
 
+private:
+    
+    static int setMicroBitIndoorBikeMiniSenorInstance(MicrobitInddorBikeMiniCrankSensorPin pin, MicroBitIndoorBikeMiniSensor* pInstance)
+    {
+        indoorBikeMiniSensor = pInstance;
+        return MICROBIT_OK;
+    }
+    static int removeMicroBitIndoorBikeMiniSenorInstance(MicrobitInddorBikeMiniCrankSensorPin pin)
+    {
+        indoorBikeMiniSensor = NULL;
+        return MICROBIT_OK;
+    }
+    static void onCrankSensorWrapper(MicroBitEvent e)
+    {
+        if (indoorBikeMiniSensor != NULL)
+        {
+            ((MicroBitIndoorBikeMiniSensor*)indoorBikeMiniSensor)->onCrankSensor(e);
+        }
+    }
+
 public:
     // Constructor.
-    MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, uint16_t id = CUSTOM_EVENT_ID_INDOORBIKE_MINI);
+    MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, MicrobitInddorBikeMiniCrankSensorPin pin = EDGE_P2, uint16_t id = CUSTOM_EVENT_ID_INDOORBIKE_MINI);
 
     /**
       * The system timer will call this member function once the component has been added to
