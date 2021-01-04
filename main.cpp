@@ -57,48 +57,46 @@ void onSensorUpdate(MicroBitEvent e)
     );
 }
 
-void onFtms(MicroBitEvent e)
+// ID: CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT
+// VAL: FTMP_OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL
+void onSetTargetResistanceLevel(MicroBitEvent e)
 {
-    //uBit.serial.printf("onBLE, Source, %d, Value, %d\r\n", e.source, e.value);
-    if (e.source==CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT && e.value == OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL)
+    uint8_t lv10 = ftms->getTargetResistanceLevel10();
+    int angle = 90;
+    if (lv10<=10)     //10  40
     {
-        uint8_t lv10 = ftms->getTargetResistanceLevel10();
-        int angle = 90;
-        if (lv10<=10)     //10  40
-        {
-            angle = 40;
-        }
-        else if(lv10<=20) //20  60
-        {
-            angle = 60;
-        }
-        else if(lv10<=30) //30  70
-        {
-            angle = 70;
-        }
-        else if(lv10<=40) //40  80
-        {
-            angle = 80;
-        }
-        else if(lv10<=50) //50  85
-        {
-            angle = 85;
-        }
-        else if(lv10<=60) //60  90
-        {
-            angle = 90;
-        }
-        else if(lv10<=70) //70  95
-        {
-            angle = 95;
-        }
-        else              //80 100
-        {
-            angle =100;
-        }
-        uBit.io.P1.setServoValue(angle);
-        uBit.serial.printf("Servo Angle: %d\r\n", angle);
+        angle = 40;
     }
+    else if(lv10<=20) //20  60
+    {
+        angle = 60;
+    }
+    else if(lv10<=30) //30  70
+    {
+        angle = 70;
+    }
+    else if(lv10<=40) //40  80
+    {
+        angle = 80;
+    }
+    else if(lv10<=50) //50  85
+    {
+        angle = 85;
+    }
+    else if(lv10<=60) //60  90
+    {
+        angle = 90;
+    }
+    else if(lv10<=70) //70  95
+    {
+        angle = 95;
+    }
+    else              //80 100
+    {
+        angle =100;
+    }
+    uBit.io.P1.setServoValue(angle);
+    uBit.serial.printf("Servo Angle: %d\r\n", angle);
 }
 
 int main()
@@ -109,7 +107,8 @@ int main()
     uBit.ble->gap().accumulateAdvertisingPayload(GapAdvertisingData::GENERIC_CYCLING);
     if (BLE_DEVICE_LOCAL_NAME_CHENGE)
     {
-        uBit.ble->gap().accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LOCAL_NAME, (const uint8_t *)BLE_DEVICE_LOCAL_NAME, sizeof(BLE_DEVICE_LOCAL_NAME)-1);
+        uBit.ble->gap().accumulateAdvertisingPayload(GapAdvertisingData::COMPLETE_LOCAL_NAME
+            , (const uint8_t *)BLE_DEVICE_LOCAL_NAME, sizeof(BLE_DEVICE_LOCAL_NAME)-1);
     }
 
     // Register for Button Events on Button(A)
@@ -119,9 +118,10 @@ int main()
     uBit.addIdleComponent(&sensor);
     uBit.messageBus.listen(CUSTOM_EVENT_ID_INDOORBIKE_MINI, MICROBIT_EVT_ANY, onSensorUpdate);
 
-    // BLE
+    // FTMS
     ftms = new MicroBitFTMIndoorBikeService(*(uBit.ble), sensor);
-    uBit.messageBus.listen(CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT, MICROBIT_EVT_ANY, onFtms);
+    uBit.messageBus.listen(CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT
+        , FTMP_OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL, onSetTargetResistanceLevel);
 
     release_fiber();
 }

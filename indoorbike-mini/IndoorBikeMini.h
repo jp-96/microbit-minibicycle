@@ -27,6 +27,13 @@ SOFTWARE.
 
 static const uint16_t CUSTOM_EVENT_ID_BASE = 32768;
 
+// # SINT16 Unitless with a resolution of 0.1
+#define VAL_MINIMUM_RESISTANCE_LEVEL    10
+// # SINT16 Unitless with a resolution of 0.1
+#define VAL_MAXIMUM_RESISTANCE_LEVEL    80
+// # UINT16 Unitless with a resolution of 0.1
+#define VAL_INCREMENT_RESISTANCE_LEVEL  10
+
 // driver/MicroBitIndoorBikeMiniSensor
 #ifndef CUSTOM_EVENT_ID_INDOORBIKE_MINI
 #define CUSTOM_EVENT_ID_INDOORBIKE_MINI (CUSTOM_EVENT_ID_BASE+1)

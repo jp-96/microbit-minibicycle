@@ -46,7 +46,7 @@ MicroBitFTMIndoorBikeService::MicroBitFTMIndoorBikeService(BLEDevice &_ble, Micr
         )
     */
     GattCharacteristic  fitnessMachineControlPointCharacteristic(UUID(0x2AD9)
-        , (uint8_t *)&fitnessMachineControlPointDataCharacteristicBuffer, 0, sizeof(fitnessMachineControlPointDataCharacteristicBuffer)
+        , (uint8_t *)&fitnessMachineControlPointCharacteristicBuffer, 0, sizeof(fitnessMachineControlPointCharacteristicBuffer)
         , GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_WRITE|GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_INDICATE);
 
     /* CHAR_FITNESS_MACHINE_FEATURE
@@ -55,6 +55,9 @@ MicroBitFTMIndoorBikeService::MicroBitFTMIndoorBikeService(BLEDevice &_ble, Micr
             bluetooth.FLAG_READ,
         )
     */
+    GattCharacteristic  fitnessMachineFeatureCharacteristic(UUID(0x2ACC)
+        , (uint8_t *)&fitnessMachineFeatureCharacteristicBuffer, 0, sizeof(fitnessMachineFeatureCharacteristicBuffer)
+        , GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_READ);
     
     /* CHAR_FITNESS_MACHINE_STATUS
         _CHAR_FITNESS_MACHINE_STATUS = (
@@ -62,13 +65,19 @@ MicroBitFTMIndoorBikeService::MicroBitFTMIndoorBikeService(BLEDevice &_ble, Micr
             bluetooth.FLAG_NOTIFY,
         )
     */
-
+    GattCharacteristic  fitnessMachineStatusCharacteristic(UUID(0x2ADA)
+        , (uint8_t *)&fitnessMachineStatusCharacteristicBuffer, 0, sizeof(fitnessMachineStatusCharacteristicBuffer)
+        , GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_NOTIFY);
+    
     /* CHAR_TRAINING_STATUS
         _CHAR_TRAINING_STATUS = (
             bluetooth.UUID(0x2AD3),
             bluetooth.FLAG_READ | bluetooth.FLAG_NOTIFY,
         )
     */
+    GattCharacteristic  fitnessTrainingStatusCharacteristic(UUID(0x2AD3)
+        , (uint8_t *)&fitnessTrainingStatusCharacteristicBuffer, 0, sizeof(fitnessTrainingStatusCharacteristicBuffer)
+        , GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_READ | GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_NOTIFY);
     
     /* CHAR_SUPPORTED_RESISTANCE_LEVEL_RANGE
         _CHAR_SUPPORTED_RESISTANCE_LEVEL_RANGE = (
@@ -76,27 +85,55 @@ MicroBitFTMIndoorBikeService::MicroBitFTMIndoorBikeService(BLEDevice &_ble, Micr
             bluetooth.FLAG_READ,
         )
     */
-
+    GattCharacteristic  fitnessSupportedResistanceLevelRangeCharacteristic(UUID(0x2AD6)
+        , (uint8_t *)&fitnessSupportedResistanceLevelRangeCharacteristicBuffer, 0, sizeof(fitnessSupportedResistanceLevelRangeCharacteristicBuffer)
+        , GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_READ);
+    
     // Set default security requirements
     indoorBikeDataCharacteristic.requireSecurity(SecurityManager::MICROBIT_BLE_SECURITY_LEVEL);
     fitnessMachineControlPointCharacteristic.requireSecurity(SecurityManager::MICROBIT_BLE_SECURITY_LEVEL);
+    fitnessMachineFeatureCharacteristic.requireSecurity(SecurityManager::MICROBIT_BLE_SECURITY_LEVEL);
+    fitnessMachineStatusCharacteristic.requireSecurity(SecurityManager::MICROBIT_BLE_SECURITY_LEVEL);
+    fitnessTrainingStatusCharacteristic.requireSecurity(SecurityManager::MICROBIT_BLE_SECURITY_LEVEL);
+    fitnessSupportedResistanceLevelRangeCharacteristic.requireSecurity(SecurityManager::MICROBIT_BLE_SECURITY_LEVEL);
 
     GattCharacteristic *characteristics[] = {
         &indoorBikeDataCharacteristic,
         &fitnessMachineControlPointCharacteristic,
+        &fitnessMachineFeatureCharacteristic,
+        &fitnessMachineStatusCharacteristic,
+        &fitnessTrainingStatusCharacteristic,
+        &fitnessSupportedResistanceLevelRangeCharacteristic,
     };
-    GattService         service(UUID(0x1826), characteristics, sizeof(characteristics) / sizeof(GattCharacteristic *));
+    GattService service(UUID(0x1826), characteristics, sizeof(characteristics) / sizeof(GattCharacteristic *));
 
     ble.addService(service);
 
+    // Characteristic Handle
     indoorBikeDataCharacteristicHandle = indoorBikeDataCharacteristic.getValueHandle();
     fitnessMachineControlPointCharacteristicHandle = fitnessMachineControlPointCharacteristic.getValueHandle();
+    fitnessMachineFeatureCharacteristicHandle = fitnessMachineFeatureCharacteristic.getValueHandle();
+    fitnessMachineStatusCharacteristicHandle = fitnessMachineStatusCharacteristic.getValueHandle();
+    fitnessTrainingStatusCharacteristicHandle = fitnessTrainingStatusCharacteristic.getValueHandle();
+    fitnessSupportedResistanceLevelRangeCharacteristicHandle = fitnessSupportedResistanceLevelRangeCharacteristic.getValueHandle();
+
+    // GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_READ
+    struct_pack(fitnessMachineFeatureCharacteristicBuffer, "<II", FTMP_FLAGS_FITNESS_MACINE_FEATURES_FIELD, FTMP_FLAGS_TARGET_SETTING_FEATURES_FIELD);
+    ble.gattServer().write(fitnessMachineFeatureCharacteristicHandle,(uint8_t *)&fitnessMachineFeatureCharacteristicBuffer, sizeof(fitnessMachineFeatureCharacteristicBuffer));
+    struct_pack(fitnessTrainingStatusCharacteristicBuffer, "<BB", FTMP_FLAGS_TRAINING_STATUS_FIELD_00_STATUS_ONLY, FTMP_VAL_TRAINING_STATUS_01_IDEL);
+    ble.gattServer().write(fitnessTrainingStatusCharacteristicHandle,(uint8_t *)&fitnessTrainingStatusCharacteristicBuffer, sizeof(fitnessTrainingStatusCharacteristicBuffer));
+    struct_pack(fitnessSupportedResistanceLevelRangeCharacteristicBuffer, "<hhH", VAL_MINIMUM_RESISTANCE_LEVEL, VAL_MAXIMUM_RESISTANCE_LEVEL, VAL_INCREMENT_RESISTANCE_LEVEL);
+    ble.gattServer().write(fitnessSupportedResistanceLevelRangeCharacteristicHandle,(uint8_t *)&fitnessSupportedResistanceLevelRangeCharacteristicBuffer, sizeof(fitnessSupportedResistanceLevelRangeCharacteristicBuffer));
     
-    //ble.gattServer().write(temperatureDataCharacteristicHandle,(uint8_t *)&temperatureDataCharacteristicBuffer, sizeof(temperatureDataCharacteristicBuffer));
-    
+    // GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_WRITE - Fitness Machine Control Point Characteristic
     ble.onDataWritten(this, &MicroBitFTMIndoorBikeService::onDataWritten);
+    
     if (EventModel::defaultEventBus)
-        EventModel::defaultEventBus->listen(this->indoorBike.getId(), MICROBIT_THERMOMETER_EVT_UPDATE, this, &MicroBitFTMIndoorBikeService::indoorBikeUpdate, MESSAGE_BUS_LISTENER_IMMEDIATE);
+    {
+        EventModel::defaultEventBus->listen(this->indoorBike.getId(), MICROBIT_INDOOR_BIKE_MINI_EVT_DATA_UPDATE
+            , this, &MicroBitFTMIndoorBikeService::indoorBikeUpdate, MESSAGE_BUS_LISTENER_IMMEDIATE);
+    }
+
 }
 
 void MicroBitFTMIndoorBikeService::indoorBikeUpdate(MicroBitEvent e)
@@ -104,11 +141,12 @@ void MicroBitFTMIndoorBikeService::indoorBikeUpdate(MicroBitEvent e)
     if (ble.getGapState().connected)
     {
         struct_pack(indoorBikeDataCharacteristicBuffer, "<HHH",
-            FLAGS_INDOOR_BIKE_DATA_CHAR,
+            FTMP_FLAGS_INDOOR_BIKE_DATA_CHAR,
             this->indoorBike.getSpeed100(),
             this->indoorBike.getCadence2()
         );
-        ble.gattServer().notify(indoorBikeDataCharacteristicHandle,(uint8_t *)&indoorBikeDataCharacteristicBuffer, sizeof(indoorBikeDataCharacteristicBuffer));
+        ble.gattServer().notify(indoorBikeDataCharacteristicHandle
+            ,(uint8_t *)&indoorBikeDataCharacteristicBuffer, sizeof(indoorBikeDataCharacteristicBuffer));
     }
 }
 
@@ -116,18 +154,30 @@ void MicroBitFTMIndoorBikeService::onDataWritten(const GattWriteCallbackParams *
 {
     if (params->handle == fitnessMachineControlPointCharacteristicHandle && params->len >= 1)
     {
-        if (params->data[0]==0x04)
+        uint8_t result=FTMP_RESULT_CODE_CPPR_03_INVALID_PARAMETER;
+        switch (params->data[0])
         {
-            this->targetResistanceLevel10 = params->data[1];
-            MicroBitEvent e(CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT, OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL);
+        case FTMP_OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL:
+            if (params->len == 2
+             && params->data[1] >= VAL_MINIMUM_RESISTANCE_LEVEL
+             && params->data[1] <= VAL_MAXIMUM_RESISTANCE_LEVEL)
+            {
+                this->targetResistanceLevel10 = params->data[1];
+                result = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
+            }
+            break;
+        
+        default:
+            result = FTMP_RESULT_CODE_CPPR_02_NOT_SUPORTED;
+            break;
         }
-        //temperaturePeriodCharacteristicBuffer = *((uint16_t *)params->data);
-        //thermometer.setPeriod(temperaturePeriodCharacteristicBuffer);
-
-        // The accelerometer will choose the nearest period to that requested that it can support
-        // Read back the ACTUAL period it is using, and report this back.
-        //temperaturePeriodCharacteristicBuffer = thermometer.getPeriod();
-        //ble.gattServer().write(temperaturePeriodCharacteristicHandle, (const uint8_t *)&temperaturePeriodCharacteristicBuffer, sizeof(temperaturePeriodCharacteristicBuffer));
+        uint8_t response[] = {FTMP_OP_CODE_CPPR_80_RESPONSE_CODE, params->data[0], result};
+        ble.gattServer().write(fitnessMachineControlPointCharacteristicHandle
+            , (const uint8_t *)&response, sizeof(response));
+        if (result==FTMP_RESULT_CODE_CPPR_01_SUCCESS)
+        {
+            new MicroBitEvent(CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT, params->data[0]);
+        }
     }
 }
 

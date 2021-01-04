@@ -58,10 +58,10 @@ private:
     static const uint64_t SENSOR_UPDATE_PERIOD_US = 1000000;
     static const uint64_t SENSOR_DATA_PACKET_PERIOD = 100000;
     static const uint64_t CRANK_INTERVAL_LIST_SIZE = 3;
-    static const uint64_t MAX_CRANK_INTERVAL_TIME_US = 4000000;
+    static const uint64_t MAX_CRANK_INTERVAL_TIME_US = 2500000;
     static const uint64_t K_CRANK_CADENCE =  120000000;
     static const uint64_t K_CRANK_SPEED   = 1800000000;
-
+    
 public:
     // Constructor.
     MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, MicrobitInddorBikeMiniCrankSensorPin pin = EDGE_P2, uint16_t id = CUSTOM_EVENT_ID_INDOORBIKE_MINI);
