@@ -131,30 +131,113 @@ void MicroBitFTMIndoorBikeService::onDataWritten(const GattWriteCallbackParams *
 {
     if (params->handle == fitnessMachineControlPointCharacteristicHandle && params->len >= 1)
     {
-        uint8_t result=FTMP_RESULT_CODE_CPPR_03_INVALID_PARAMETER;
-        switch (params->data[0])
+        static const uint16_t bufferSize = 20;
+        uint8_t responseBuffer[bufferSize];
+        uint16_t responseIndex=0;
+        responseBuffer[responseIndex++] = FTMP_OP_CODE_CPPR_80_RESPONSE_CODE;
+        uint8_t *opCode=&responseBuffer[responseIndex++];
+        opCode[0]=params->data[0];
+        uint8_t *result=&responseBuffer[responseIndex++];
+        result[0] = FTMP_RESULT_CODE_CPPR_03_INVALID_PARAMETER;
+        for(int i=1;i++;i<(params->len-1))
         {
+            responseBuffer[responseIndex++]=params->data[i];
+            if (responseIndex>=bufferSize)
+            {
+                break;
+            }
+        }
+        switch (opCode[0])
+        {
+        case FTMP_OP_CODE_CPPR_00_REQUEST_CONTROL:
+            if (params->len == 1)
+            {
+                result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
+            }
+            break;
+
+        case FTMP_OP_CODE_CPPR_01_RESET:
+            if (params->len == 1)
+            {
+                this->stopOrRause = 0x01;
+                result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
+            }
+            break;
+
         case FTMP_OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL:
             if (params->len == 2
              && params->data[1] >= VAL_MINIMUM_RESISTANCE_LEVEL
              && params->data[1] <= VAL_MAXIMUM_RESISTANCE_LEVEL)
             {
                 this->targetResistanceLevel10 = params->data[1];
-                result = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
+                result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
             }
             break;
-        
-        default:
-            result = FTMP_RESULT_CODE_CPPR_02_NOT_SUPORTED;
+
+        case FTMP_OP_CODE_CPPR_07_START_RESUME:
+            if (params->len == 1)
+            {
+                this->stopOrRause = 0x00;
+                result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
+            }
             break;
+
+        case FTMP_OP_CODE_CPPR_08_STOP_PAUSE:
+            if (params->len == 2)
+            {
+                this->stopOrRause = params->data[1];
+                result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
+            }
+            break;
+
+        case FTMP_OP_CODE_CPPR_11_SET_INDOOR_BIKE_SIMULATION:
+            switch (params->len)
+            {
+            case 3:
+                //if s==2:
+                //    (self._windSpeed1000,) = struct.unpack("<h", self.parameter)
+            
+                result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
+                break;
+            
+            case 5:
+                //elif s==4:
+                //    (self._windSpeed1000, self._grade100,) = struct.unpack("<hh", self.parameter)
+                result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
+                break;
+            
+            case 6:
+                //elif s==5:
+                //    (self._windSpeed1000, self._grade100, self._crr10000,) = struct.unpack("<hhb", self.parameter)
+                result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
+                break;
+                
+            case 7:
+                //elif s==6:
+                //    (self._windSpeed1000, self._grade100, self._crr10000, self._cw100,) = struct.unpack("<hhBB", self.parameter)
+                result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
+                break;
+
+            default:
+                break;
+            }
+
+        default:
+            result[0] = FTMP_RESULT_CODE_CPPR_02_NOT_SUPORTED;
+            break;
+
         }
-        uint8_t response[] = {FTMP_OP_CODE_CPPR_80_RESPONSE_CODE, params->data[0], result};
+
+        // Response - Fitness Machine Control Point
         ble.gattServer().write(fitnessMachineControlPointCharacteristicHandle
-            , (const uint8_t *)&response, sizeof(response));
-        if (result==FTMP_RESULT_CODE_CPPR_01_SUCCESS)
+                , (const uint8_t *)&responseBuffer, responseIndex);
+        
+        // Fire MicroBit Event
+        if (result[0]==FTMP_RESULT_CODE_CPPR_01_SUCCESS)
         {
-            new MicroBitEvent(CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT, params->data[0]);
+            new MicroBitEvent(CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT, opCode[0]);
         }
+
     }
 }
 
@@ -176,3 +259,14 @@ uint8_t MicroBitFTMIndoorBikeService::getTargetResistanceLevel10()
 {
     return this->targetResistanceLevel10;
 }
+
+bool MicroBitFTMIndoorBikeService::isStop()
+{
+    return this->stopOrRause == 0x01;
+}
+
+bool MicroBitFTMIndoorBikeService::isPause()
+{
+    return this->stopOrRause == 0x02;
+}
+

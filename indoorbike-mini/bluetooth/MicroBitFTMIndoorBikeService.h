@@ -50,9 +50,9 @@ SOFTWARE.
 
 // # Fitness Machine Control Point Procedure Requirements
 // # 0x00 M Request Control
-#define FTMP_OP_CODE_CPPR_00_REQUEST_CONTROL             0x00
+#define FTMP_OP_CODE_CPPR_00_REQUEST_CONTROL 0x00
 // # 0x01 M Reset
-#define FTMP_OP_CODE_CPPR_01_RESET                       0x01
+#define FTMP_OP_CODE_CPPR_01_RESET 0x01
 // # 0x04 C.3 Set Target Resistance Level [UINT8, Level]
 #define FTMP_OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL 0x04
 // # 0x07 M Start or Resume
@@ -189,10 +189,14 @@ private:
 
     // var
     uint8_t targetResistanceLevel10;
+    uint8_t stopOrRause;
 
 public:
     // getter/setter
     uint8_t getTargetResistanceLevel10(void);
+    bool isStop(void);
+    bool isPause(void);
+
 };
 
 #endif /* #ifndef MICROBIT_FTM_INDOOR_BIKE_SERVICE_H */

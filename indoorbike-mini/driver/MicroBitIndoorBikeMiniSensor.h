@@ -55,10 +55,10 @@ class MicroBitIndoorBikeMiniSensor : public MicroBitComponent
 private:
     MicroBit &uBit;
     
-    static const uint64_t SENSOR_UPDATE_PERIOD_US = 1000000;
-    static const uint64_t SENSOR_DATA_PACKET_PERIOD = 100000;
+    static const uint64_t SENSOR_UPDATE_PERIOD_US =    1000000; // 1s
+    static const uint64_t SENSOR_DATA_PACKET_PERIOD =   100000; // 100ms
+    static const uint64_t MAX_CRANK_INTERVAL_TIME_US = 2500000; // 2.5s
     static const uint64_t CRANK_INTERVAL_LIST_SIZE = 3;
-    static const uint64_t MAX_CRANK_INTERVAL_TIME_US = 2500000;
     static const uint64_t K_CRANK_CADENCE =  120000000;
     static const uint64_t K_CRANK_SPEED   = 1800000000;
     
