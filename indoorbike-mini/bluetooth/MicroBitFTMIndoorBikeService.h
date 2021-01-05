@@ -148,7 +148,6 @@ class MicroBitFTMIndoorBikeService
 {
 
 public:
-
     /**
       * Constructor.
       * Create a representation of the IndoorBikeService
@@ -168,8 +167,7 @@ public:
     void indoorBikeUpdate(MicroBitEvent e);
 
 private:
-
-    // Bluetooth stack we're running on.
+    // instance
     BLEDevice &ble;
     MicroBitIndoorBikeMiniSensor &indoorBike;
     
@@ -193,6 +191,7 @@ private:
     uint8_t targetResistanceLevel10;
 
 public:
+    // getter/setter
     uint8_t getTargetResistanceLevel10(void);
 };
 
