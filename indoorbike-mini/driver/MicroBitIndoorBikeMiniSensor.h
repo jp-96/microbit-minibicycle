@@ -36,11 +36,6 @@ SOFTWARE.
 // #define MICROBIT_COMPONENT_RUNNING		0x01
 #define MICROBIT_INDOOR_BIKE_MINI_ADDED_TO_IDLE              0x02
 
-/**
-  * Indoor Bike Mini events
-  */
-#define MICROBIT_INDOOR_BIKE_MINI_EVT_DATA_UPDATE              1
-
 enum MicrobitInddorBikeMiniCrankSensorPin
 {
     EDGE_P0 = 0,

@@ -58,7 +58,7 @@ void onSensorUpdate(MicroBitEvent e)
 }
 
 // ID: CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT
-// VAL: FTMP_OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL
+// VAL: FTMP_EVENT_VAL_OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL
 void onSetTargetResistanceLevel(MicroBitEvent e)
 {
     uint8_t lv10 = ftms->getTargetResistanceLevel10();
@@ -121,7 +121,16 @@ int main()
     // FTMS
     ftms = new MicroBitFTMIndoorBikeService(*(uBit.ble), sensor);
     uBit.messageBus.listen(CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT
-        , FTMP_OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL, onSetTargetResistanceLevel);
-
+        , FTMP_EVENT_VAL_OP_CODE_CPPR_00_REQUEST_CONTROL, onSetTargetResistanceLevel);
+    uBit.messageBus.listen(CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT
+        , FTMP_EVENT_VAL_OP_CODE_CPPR_01_RESET, onSetTargetResistanceLevel);
+    uBit.messageBus.listen(CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT
+        , FTMP_EVENT_VAL_OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL, onSetTargetResistanceLevel);
+    uBit.messageBus.listen(CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT
+        , FTMP_EVENT_VAL_OP_CODE_CPPR_07_START_RESUME, onSetTargetResistanceLevel);
+    uBit.messageBus.listen(CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT
+        , FTMP_EVENT_VAL_OP_CODE_CPPR_08_STOP_PAUSE, onSetTargetResistanceLevel);
+    uBit.messageBus.listen(CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT
+        , FTMP_EVENT_VAL_OP_CODE_CPPR_11_SET_INDOOR_BIKE_SIMULATION, onSetTargetResistanceLevel);
     release_fiber();
 }

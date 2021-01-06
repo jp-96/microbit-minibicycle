@@ -29,6 +29,13 @@ MicroBitFTMIndoorBikeService::MicroBitFTMIndoorBikeService(BLEDevice &_ble, Micr
         ble(_ble), indoorBike(_indoorBike)
 {
     
+    this->targetResistanceLevel10=10;
+    this->stopOrPause=0;
+    this->windSpeed1000=0;
+    this->grade100=0;
+    this->crr10000=0;
+    this->cw100=0;
+    this->nextFitnessMachineStatusIndoorBikeSimulationParametersChangedSize=0;   
     // Caractieristic
     GattCharacteristic  indoorBikeDataCharacteristic(
         UUID(0x2AD2)
@@ -131,25 +138,17 @@ void MicroBitFTMIndoorBikeService::onDataWritten(const GattWriteCallbackParams *
 {
     if (params->handle == fitnessMachineControlPointCharacteristicHandle && params->len >= 1)
     {
-        static const uint16_t bufferSize = 20;
-        uint8_t responseBuffer[bufferSize];
-        uint16_t responseIndex=0;
-        responseBuffer[responseIndex++] = FTMP_OP_CODE_CPPR_80_RESPONSE_CODE;
-        uint8_t *opCode=&responseBuffer[responseIndex++];
+        uint8_t responseBuffer[3];
+        responseBuffer[0] = FTMP_OP_CODE_CPPR_80_RESPONSE_CODE;
+        uint8_t *opCode=&responseBuffer[1];
         opCode[0]=params->data[0];
-        uint8_t *result=&responseBuffer[responseIndex++];
+        uint8_t *result=&responseBuffer[2];
         result[0] = FTMP_RESULT_CODE_CPPR_03_INVALID_PARAMETER;
-        for(int i=1;i++;i<(params->len-1))
-        {
-            responseBuffer[responseIndex++]=params->data[i];
-            if (responseIndex>=bufferSize)
-            {
-                break;
-            }
-        }
+        uint16_t eventValue;
         switch (opCode[0])
         {
         case FTMP_OP_CODE_CPPR_00_REQUEST_CONTROL:
+            eventValue=FTMP_EVENT_VAL_OP_CODE_CPPR_00_REQUEST_CONTROL;
             if (params->len == 1)
             {
                 result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
@@ -157,14 +156,15 @@ void MicroBitFTMIndoorBikeService::onDataWritten(const GattWriteCallbackParams *
             break;
 
         case FTMP_OP_CODE_CPPR_01_RESET:
+            eventValue=FTMP_EVENT_VAL_OP_CODE_CPPR_01_RESET;
             if (params->len == 1)
             {
-                this->stopOrRause = 0x01;
                 result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
             }
             break;
 
         case FTMP_OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL:
+            eventValue=FTMP_EVENT_VAL_OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL;
             if (params->len == 2
              && params->data[1] >= VAL_MINIMUM_RESISTANCE_LEVEL
              && params->data[1] <= VAL_MAXIMUM_RESISTANCE_LEVEL)
@@ -175,51 +175,62 @@ void MicroBitFTMIndoorBikeService::onDataWritten(const GattWriteCallbackParams *
             break;
 
         case FTMP_OP_CODE_CPPR_07_START_RESUME:
+            eventValue=FTMP_EVENT_VAL_OP_CODE_CPPR_07_START_RESUME;
             if (params->len == 1)
             {
-                this->stopOrRause = 0x00;
                 result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
             }
             break;
 
         case FTMP_OP_CODE_CPPR_08_STOP_PAUSE:
+            eventValue=FTMP_EVENT_VAL_OP_CODE_CPPR_08_STOP_PAUSE;
             if (params->len == 2)
             {
-                this->stopOrRause = params->data[1];
+                this->stopOrPause = params->data[1];
                 result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
             }
             break;
 
         case FTMP_OP_CODE_CPPR_11_SET_INDOOR_BIKE_SIMULATION:
+            eventValue=FTMP_EVENT_VAL_OP_CODE_CPPR_11_SET_INDOOR_BIKE_SIMULATION;
+            this->windSpeed1000=0;
+            this->grade100=0;
+            this->crr10000=0;
+            this->cw100=0;
             switch (params->len)
             {
             case 3:
-                //if s==2:
-                //    (self._windSpeed1000,) = struct.unpack("<h", self.parameter)
-            
+                struct_unpack(&params->data[1], "<h", &this->windSpeed1000);
                 result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
                 break;
             
             case 5:
-                //elif s==4:
-                //    (self._windSpeed1000, self._grade100,) = struct.unpack("<hh", self.parameter)
+                struct_unpack(&params->data[1], "<hh", &this->windSpeed1000, &this->grade100);
                 result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
                 break;
             
             case 6:
-                //elif s==5:
-                //    (self._windSpeed1000, self._grade100, self._crr10000,) = struct.unpack("<hhb", self.parameter)
+                struct_unpack(&params->data[1], "<hhB", &this->windSpeed1000, &this->grade100, &this->crr10000);
                 result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
                 break;
                 
             case 7:
-                //elif s==6:
-                //    (self._windSpeed1000, self._grade100, self._crr10000, self._cw100,) = struct.unpack("<hhBB", self.parameter)
+                struct_unpack(&params->data[1], "<hhBB", &this->windSpeed1000, &this->grade100, &this->crr10000, &this->cw100);
                 result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
                 break;
 
             default:
                 break;
+            }
+            if (result[0]==FTMP_RESULT_CODE_CPPR_01_SUCCESS)
+            {
+                // for sendFitnessMachineStatusIndoorBikeSimulationParametersChanged
+                this->nextFitnessMachineStatusIndoorBikeSimulationParametersChanged[0]=FTMP_OP_CODE_FITNESS_MACHINE_STATUS_12_INDOOR_BIKE_SIMULATION_PARAMETERS_CHANGED;
+                this->nextFitnessMachineStatusIndoorBikeSimulationParametersChangedSize=params->len;
+                for (int i=1; i++; i<params->len )
+                {
+                    this->nextFitnessMachineStatusIndoorBikeSimulationParametersChanged[i] = params->data[i];
+                }
             }
 
         default:
@@ -230,12 +241,12 @@ void MicroBitFTMIndoorBikeService::onDataWritten(const GattWriteCallbackParams *
 
         // Response - Fitness Machine Control Point
         ble.gattServer().write(fitnessMachineControlPointCharacteristicHandle
-                , (const uint8_t *)&responseBuffer, responseIndex);
+                , (const uint8_t *)&responseBuffer, sizeof(responseBuffer));
         
         // Fire MicroBit Event
         if (result[0]==FTMP_RESULT_CODE_CPPR_01_SUCCESS)
         {
-            new MicroBitEvent(CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT, opCode[0]);
+            new MicroBitEvent(CUSTOM_EVENT_ID_FITNESS_MACHINE_CONTROL_POINT, eventValue);
         }
 
     }
@@ -251,7 +262,7 @@ void MicroBitFTMIndoorBikeService::indoorBikeUpdate(MicroBitEvent e)
             this->indoorBike.getCadence2()
         );
         ble.gattServer().notify(indoorBikeDataCharacteristicHandle
-            ,(uint8_t *)&indoorBikeDataCharacteristicBuffer, sizeof(indoorBikeDataCharacteristicBuffer));
+            , (uint8_t *)&indoorBikeDataCharacteristicBuffer, sizeof(indoorBikeDataCharacteristicBuffer));
     }
 }
 
@@ -260,13 +271,69 @@ uint8_t MicroBitFTMIndoorBikeService::getTargetResistanceLevel10()
     return this->targetResistanceLevel10;
 }
 
-bool MicroBitFTMIndoorBikeService::isStop()
+uint8_t MicroBitFTMIndoorBikeService::getStopOrPause()
 {
-    return this->stopOrRause == 0x01;
+    return this->stopOrPause;
 }
 
-bool MicroBitFTMIndoorBikeService::isPause()
+int16_t MicroBitFTMIndoorBikeService::getWindSpeed1000(void)
 {
-    return this->stopOrRause == 0x02;
+    return this->windSpeed1000;
 }
 
+int16_t MicroBitFTMIndoorBikeService::getGrade100(void)
+{
+    return this->grade100;
+}
+
+uint8_t MicroBitFTMIndoorBikeService::getCrr10000(void)
+{
+    return this->crr10000;
+}
+
+uint8_t MicroBitFTMIndoorBikeService::getCw100(void)
+{
+    return this->cw100;
+}
+
+
+void MicroBitFTMIndoorBikeService::sendTrainingStatusIdle(void)
+{
+    static const uint8_t buff[]={FTMP_FLAGS_TRAINING_STATUS_FIELD_00_STATUS_ONLY, FTMP_VAL_TRAINING_STATUS_01_IDEL};
+    ble.gattServer().notify(this->fitnessTrainingStatusCharacteristicHandle
+        , (uint8_t *)&buff, sizeof(buff));
+}
+
+void MicroBitFTMIndoorBikeService::sendTrainingStatusManualMode(void)
+{
+    static const uint8_t buff[]={FTMP_FLAGS_TRAINING_STATUS_FIELD_00_STATUS_ONLY, FTMP_VAL_TRAINING_STATUS_0D_MANUAL_MODE};
+    ble.gattServer().notify(this->fitnessTrainingStatusCharacteristicHandle
+        , (uint8_t *)&buff, sizeof(buff));
+}
+    
+void MicroBitFTMIndoorBikeService::sendFitnessMachineStatusReset(void)
+{
+    static const uint8_t buff[]={FTMP_OP_CODE_FITNESS_MACHINE_STATUS_01_RESET};
+    ble.gattServer().notify(this->fitnessTrainingStatusCharacteristicHandle
+        , (uint8_t *)&buff, sizeof(buff));
+}
+
+void MicroBitFTMIndoorBikeService::sendFitnessMachineStatusTargetResistanceLevelChanged(uint8_t level)
+{
+    uint8_t buff[2];
+    buff[0]=FTMP_OP_CODE_FITNESS_MACHINE_STATUS_07_TARGET_RESISTANCE_LEVEL_CHANGED;
+    buff[1]=level;
+    ble.gattServer().notify(this->fitnessTrainingStatusCharacteristicHandle
+        , (uint8_t *)&buff, sizeof(buff));
+}
+
+void MicroBitFTMIndoorBikeService::sendFitnessMachineStatusIndoorBikeSimulationParametersChanged(void)
+{
+    if (this->nextFitnessMachineStatusIndoorBikeSimulationParametersChangedSize>0)
+    {
+        ble.gattServer().notify(fitnessTrainingStatusCharacteristicHandle
+            , (uint8_t *)&this->nextFitnessMachineStatusIndoorBikeSimulationParametersChanged
+            , this->nextFitnessMachineStatusIndoorBikeSimulationParametersChangedSize);
+    }
+    
+}

@@ -120,7 +120,7 @@ SOFTWARE.
 #                                                                                 0 (bit  0) Speed Target Setting Supported
 #                                                  10987654321098765432109876543210 */
 #define FTMP_FLAGS_TARGET_SETTING_FEATURES_FIELD 0b00000000000000000000000000000100
-    
+
 // # Fitness Machine Status values
 // # 0x01 Reset
 #define FTMP_OP_CODE_FITNESS_MACHINE_STATUS_01_RESET                                      0x01
@@ -189,13 +189,30 @@ private:
 
     // var
     uint8_t targetResistanceLevel10;
-    uint8_t stopOrRause;
+    uint8_t stopOrPause;
+    int16_t windSpeed1000;
+    int16_t grade100;
+    uint8_t crr10000;
+    uint8_t cw100;
+    
+    // for sendFitnessMachineStatusIndoorBikeSimulationParametersChanged
+    uint8_t nextFitnessMachineStatusIndoorBikeSimulationParametersChanged[7];
+    uint16_t nextFitnessMachineStatusIndoorBikeSimulationParametersChangedSize;
 
 public:
     // getter/setter
     uint8_t getTargetResistanceLevel10(void);
-    bool isStop(void);
-    bool isPause(void);
+    uint8_t getStopOrPause(void);
+    int16_t getWindSpeed1000(void);
+    int16_t getGrade100(void);
+    uint8_t getCrr10000(void);
+    uint8_t getCw100(void);
+    
+    void sendTrainingStatusIdle(void);
+    void sendTrainingStatusManualMode(void);
+    void sendFitnessMachineStatusReset(void);
+    void sendFitnessMachineStatusTargetResistanceLevelChanged(uint8_t level);
+    void sendFitnessMachineStatusIndoorBikeSimulationParametersChanged(void);
 
 };
 
