@@ -38,15 +38,15 @@ SOFTWARE.
 #                                                0 (bit  9) Heart Rate Present
 #                                                 0 (bit  8) Expended Energy Present
 #                                                  0 (bit  7) Average Power Present
-#                                                   0 (bit  6)*Instantaneous Power Present
-#                                                    0 (bit  5)*Resistance Level Present
+#                                                   1 (bit  6)*Instantaneous Power Present
+#                                                    1 (bit  5)*Resistance Level Present
 #                                                     0 (bit  4) Total Distance Present
 #                                                      0 (bit  3) Average Cadence present
 #                                                       1 (bit  2)*Instantaneous Cadence (uint16, 1/minute with a resolution of 0.5)
 #                                                        0 (bit  1) Average Speed present
 #                                                         0 (bit  0) More Data
 #                                          5432109876543210 */
-#define FTMP_FLAGS_INDOOR_BIKE_DATA_CHAR 0b0000000000000100
+#define FTMP_FLAGS_INDOOR_BIKE_DATA_CHAR 0b0000000001100100
 
 // # Fitness Machine Control Point Procedure Requirements
 // # 0x00 M Request Control
@@ -80,7 +80,7 @@ SOFTWARE.
 #                                                  000000000000000 (bits 17-31) Reserved for Future Use
 #                                                                 0 (bit 16) User Data Retention Supported
 #                                                                  0 (bit 15) Force on Belt and Power Output Supported
-#                                                                   0 (bit 14)*Power Measurement Supported
+#                                                                   1 (bit 14)*Power Measurement Supported
 #                                                                    0 (bit 13) Remaining Time Supported
 #                                                                     0 (bit 12) Elapsed Time Supported
 #                                                                      0 (bit 11) Metabolic Equivalent Supported
@@ -93,10 +93,10 @@ SOFTWARE.
 #                                                                             0 (bit  4) Elevation Gain Supported
 #                                                                              0 (bit  3) Inclination Supported
 #                                                                               0 (bit  2) Total Distance Supported
-#                                                                                0 (bit  1) Cadence Supported
+#                                                                                1 (bit  1) Cadence Supported
 #                                                                                 0 (bit  0) Average Speed Supported
 #                                                  10987654321098765432109876543210 */
-#define FTMP_FLAGS_FITNESS_MACINE_FEATURES_FIELD 0b00000000000000000000000010000000
+#define FTMP_FLAGS_FITNESS_MACINE_FEATURES_FIELD 0b00000000000000000100000010000010
 
 /*
 # Definition of the bits of the Target Setting Features field
@@ -104,7 +104,7 @@ SOFTWARE.
 #                                                                 0 (bit 16) Targeted Cadence Configuration Supported
 #                                                                  0 (bit 15) Spin Down Control Supported
 #                                                                   0 (bit 14) Wheel Circumference Configuration Supported
-#                                                                    0 (bit 13)*Indoor Bike Simulation Parameters Supported
+#                                                                    1 (bit 13)*Indoor Bike Simulation Parameters Supported
 #                                                                     0 (bit 12) Targeted Time in Five Heart Rate Zones Configuration Supported
 #                                                                      0 (bit 11) Targeted Time in Three Heart Rate Zones Configuration Supported
 #                                                                       0 (bit 10) Targeted Time in Two Heart Rate Zones Configuration Supported
@@ -119,7 +119,7 @@ SOFTWARE.
 #                                                                                0 (bit  1) Inclination Target Setting Supported
 #                                                                                 0 (bit  0) Speed Target Setting Supported
 #                                                  10987654321098765432109876543210 */
-#define FTMP_FLAGS_TARGET_SETTING_FEATURES_FIELD 0b00000000000000000000000000000100
+#define FTMP_FLAGS_TARGET_SETTING_FEATURES_FIELD 0b00000000000000000010000000000100
 
 // # Fitness Machine Status values
 // # 0x01 Reset
@@ -172,11 +172,11 @@ private:
     MicroBitIndoorBikeMiniSensor &indoorBike;
     
     // Characteristic buffer
-    uint8_t indoorBikeDataCharacteristicBuffer[2+2+2];
+    uint8_t indoorBikeDataCharacteristicBuffer[2+2+2+2+2];
     uint8_t fitnessMachineControlPointCharacteristicBuffer[1+2+2+1+1];
     uint8_t fitnessMachineFeatureCharacteristicBuffer[4+4];
     uint8_t fitnessMachineStatusCharacteristicBuffer[2];
-    uint8_t fitnessTrainingStatusCharacteristicBuffer[2];
+    uint8_t fitnessTrainingStatusCharacteristicBuffer[1+7];
     uint8_t fitnessSupportedResistanceLevelRangeCharacteristicBuffer[2+2+2];
     
     // Handles to access each characteristic when they are held by Soft Device.
@@ -202,17 +202,25 @@ private:
 public:
     // getter/setter
     uint8_t getTargetResistanceLevel10(void);
+    void    setTargetResistanceLevel10(uint8_t level10);
     uint8_t getStopOrPause(void);
     int16_t getWindSpeed1000(void);
     int16_t getGrade100(void);
     uint8_t getCrr10000(void);
     uint8_t getCw100(void);
-    
+
+private:
+    // status message
     void sendTrainingStatusIdle(void);
     void sendTrainingStatusManualMode(void);
     void sendFitnessMachineStatusReset(void);
-    void sendFitnessMachineStatusTargetResistanceLevelChanged(uint8_t level);
+public:
+    // status message
+    void sendFitnessMachineStatusTargetResistanceLevelChanged(void);
     void sendFitnessMachineStatusIndoorBikeSimulationParametersChanged(void);
+
+private:
+    void onFitnessMachineControlPoint(MicroBitEvent e);
 
 };
 

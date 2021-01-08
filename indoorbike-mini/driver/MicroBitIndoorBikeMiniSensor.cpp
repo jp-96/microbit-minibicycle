@@ -24,9 +24,27 @@ SOFTWARE.
 #include "MicroBit.h"
 #include "MicroBitIndoorBikeMiniSensor.h"
 
+void defaultCalcIndoorBikeData(uint8_t resistanceLevel10, uint32_t crankIntervalTime, uint32_t* cadence2, uint32_t* speed100, int32_t*  power)
+{
+    
+    if (crankIntervalTime==0)
+    {
+        *cadence2 = 0;
+        *speed100 = 0;
+        *power = 0;
+    }
+    else
+    {
+        *cadence2  = (uint32_t)( (uint64_t)K_CRANK_CADENCE / crankIntervalTime );
+        *speed100 = (uint32_t)( (uint64_t)K_CRANK_SPEED   / crankIntervalTime );
+        // https://diary.cyclekikou.net/archives/15876
+        *power = (int32_t)((double)(*speed100) * (K_INCLINE_A * ((double)resistanceLevel10)/10 + K_INCLINE_B) * K_POWER);
+    }
+}
+
 // コンストラクタ
-MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, MicrobitInddorBikeMiniCrankSensorPin pin, uint16_t id)
-    : uBit(_uBit)
+MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, FuncCalcIndoorBikeData _pFuncCalcIndoorBikeData, MicrobitInddorBikeMiniCrankSensorPin pin, uint16_t id)
+    : uBit(_uBit), pFuncCalcIndoorBikeData(_pFuncCalcIndoorBikeData)
 {
     this->id = id;
     this->lastIntervalTime=0;
@@ -34,6 +52,7 @@ MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, Micr
     this->lastSpeed100=0;
     this->updateSampleTimestamp=0;
     this->nextSensorTimestamp=0;
+    this->resistanceLevel10=0;
 
     if (EventModel::defaultEventBus)
         EventModel::defaultEventBus->listen(MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVENT_IDs[pin], MICROBIT_PIN_EVT_RISE
@@ -94,14 +113,19 @@ uint32_t MicroBitIndoorBikeMiniSensor::getIntervalTime(void)
     return this->lastIntervalTime;
 }
 
+uint32_t MicroBitIndoorBikeMiniSensor::getCadence2(void)
+{
+    return this->lastCadence2;
+}
+
 uint32_t MicroBitIndoorBikeMiniSensor::getSpeed100(void)
 {
     return this->lastSpeed100;
 }
 
-uint32_t MicroBitIndoorBikeMiniSensor::getCadence2(void)
+int32_t  MicroBitIndoorBikeMiniSensor::getPower(void)
 {
-    return this->lastCadence2;
+    return this->lastPower;
 }
 
 void MicroBitIndoorBikeMiniSensor::update()
@@ -128,23 +152,20 @@ void MicroBitIndoorBikeMiniSensor::update()
                 this->intervalList.pop();
             }
         }
-        uint64_t intervalNum = 0;
-        uint64_t periodTime = 0;
         if (this->intervalList.size() < 2)
         {
-            intervalNum = 0;
-            periodTime = 0;
             this->lastIntervalTime = 0;
-            this->lastCadence2 = 0;
-            this->lastSpeed100 = 0;
         }
         else
         {
-            intervalNum = this->intervalList.size() - 1;
-            periodTime = this->intervalList.back() - this->intervalList.front();
+            uint64_t intervalNum = this->intervalList.size() - 1;
+            uint64_t periodTime = this->intervalList.back() - this->intervalList.front();
             this->lastIntervalTime = periodTime / intervalNum;
-            this->lastCadence2  = (uint32_t)( this->K_CRANK_CADENCE / this->lastIntervalTime );
-            this->lastSpeed100 = (uint32_t)( this->K_CRANK_SPEED   / this->lastIntervalTime );
+        }
+        defaultCalcIndoorBikeData(this->resistanceLevel10, this->lastIntervalTime, &this->lastCadence2, &this->lastSpeed100, &this->lastPower);
+        if (this->pFuncCalcIndoorBikeData)
+        {
+            (*this->pFuncCalcIndoorBikeData)(this->resistanceLevel10, this->lastIntervalTime, &this->lastCadence2, &this->lastSpeed100, &this->lastPower);
         }
         
         //uBit.serial.printf("current, %d, num, %d, period, %d, tt, %d, cd, %d, spd, %d\r\n",
@@ -163,5 +184,13 @@ void MicroBitIndoorBikeMiniSensor::onCrankSensor(MicroBitEvent e)
     {
         this->nextSensorTimestamp = e.timestamp + this->SENSOR_DATA_PACKET_PERIOD;
         this->setCurrentTimeOnCrankSignal(e.timestamp);
+    }
+}
+
+void MicroBitIndoorBikeMiniSensor::setResistanceLevel10(uint8_t resistanceLevel10)
+{
+    if (this->resistanceLevel10!=resistanceLevel10)
+    {
+        this->resistanceLevel10 = resistanceLevel10;
     }
 }
