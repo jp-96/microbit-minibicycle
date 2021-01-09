@@ -23,6 +23,7 @@ SOFTWARE.
 
 */
 
+#include "inttypes.h"
 #include "MicroBit.h"
 #include "IndoorBikeMini.h"
 #include "indoorbike-mini/driver/MicroBitIndoorBikeMiniServo.h"
@@ -46,13 +47,13 @@ void onButton(MicroBitEvent e)
     switch (e.source)
     {
     case MICROBIT_ID_BUTTON_A:
-        uBit.serial.printf("%lu, MICROBIT_ID_BUTTON_A()\r\n", e.timestamp);
+        uBit.serial.printf("%"PRIu32", MICROBIT_ID_BUTTON_A()\r\n", (uint32_t)e.timestamp);
         servo->decrementTargetResistanceLevel10();
         ftms->setTargetResistanceLevel10(servo->getTargetResistanceLevel10());
         break;
     
     case MICROBIT_ID_BUTTON_B:
-        uBit.serial.printf("%lu, MICROBIT_ID_BUTTON_B()\r\n", e.timestamp);
+        uBit.serial.printf("%"PRIu32", MICROBIT_ID_BUTTON_B()\r\n", (uint32_t)e.timestamp);
         servo->incrementTargetResistanceLevel10();
         ftms->setTargetResistanceLevel10(servo->getTargetResistanceLevel10());
         break;
@@ -64,14 +65,14 @@ void onButton(MicroBitEvent e)
 
 void onServoUpdate(MicroBitEvent e)
 {
-    uBit.serial.printf("%lu, onServoUpdate()\r\n", e.timestamp);
+    uBit.serial.printf("%"PRIu32", onServoUpdate()\r\n", (uint32_t)e.timestamp);
     uBit.display.print(ManagedString((int)servo->getTargetResistanceLevel10()/10));
 }
 
 void onSensorUpdate(MicroBitEvent e)
 {
-    //uBit.serial.printf("%lu, onSensorUpdate()\r\n", e.timestamp);
-    uBit.serial.printf("%lu, T, %d, C, %d, S, %d\r\n", e.timestamp
+    uBit.serial.printf("%"PRIu32", onSensorUpdate(), ", (uint32_t)e.timestamp);
+    uBit.serial.printf("T, %"PRIu32", C, %"PRIu32", S, %"PRIu32"\r\n"
         , sensor->getIntervalTime()
         , sensor->getCadence2()/2
         , sensor->getSpeed100()
@@ -82,7 +83,7 @@ void onSensorUpdate(MicroBitEvent e)
 // VAL: FTMP_EVENT_VAL_OP_CODE_CPPR_01_RESET
 void onReset(MicroBitEvent e)
 {
-    uBit.serial.printf("%lu, onReset()\r\n", e.timestamp);
+    uBit.serial.printf("%"PRIu32", onReset()\r\n", (uint32_t)e.timestamp);
     ftms->setTargetResistanceLevel10(20);
 }
 
@@ -90,7 +91,7 @@ void onReset(MicroBitEvent e)
 // VAL: FTMP_EVENT_VAL_OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL
 void onSetTargetResistanceLevel(MicroBitEvent e)
 {
-    uBit.serial.printf("%lu, onSetTargetResistanceLevel()\r\n", e.timestamp);
+    uBit.serial.printf("%"PRIu32", onSetTargetResistanceLevel()\r\n", (uint32_t)e.timestamp);
     uint8_t lv10 = ftms->getTargetResistanceLevel10();
     servo->setTargetResistanceLevel10(lv10);
     ftms->sendFitnessMachineStatusTargetResistanceLevelChanged();
@@ -101,7 +102,7 @@ void onSetTargetResistanceLevel(MicroBitEvent e)
 // VAL: FTMP_EVENT_VAL_OP_CODE_CPPR_11_SET_INDOOR_BIKE_SIMULATION_CHANGED
 void onSimulationChanged(MicroBitEvent e)
 {
-    uBit.serial.printf("%lu, onSimulationChanged()\r\n", e.timestamp);
+    uBit.serial.printf("%"PRIu32", onSimulationChanged()\r\n", (uint32_t)e.timestamp);
     int16_t grade100 = ftms->getGrade100();
     if (grade100<0)
     {
@@ -159,7 +160,7 @@ void init()
     // IdleTick
     servo = new MicroBitIndoorBikeMiniServo(uBit);
     sensor = new MicroBitIndoorBikeMiniSensor(uBit, calcIndoorBikeData);
-    uBit.addIdleComponent(servo);
+    //uBit.addIdleComponent(servo);
     uBit.addIdleComponent(sensor);
     uBit.messageBus.listen(CUSTOM_EVENT_ID_INDOORBIKE_MINI_SERVO, MICROBIT_EVT_ANY, onServoUpdate);
     uBit.messageBus.listen(CUSTOM_EVENT_ID_INDOORBIKE_MINI_SENSOR, MICROBIT_EVT_ANY, onSensorUpdate);
