@@ -56,7 +56,7 @@ MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, Func
 
     if (EventModel::defaultEventBus)
         EventModel::defaultEventBus->listen(MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVENT_IDs[pin], MICROBIT_PIN_EVT_RISE
-            , this, &MicroBitIndoorBikeMiniSensor::onCrankSensor, MESSAGE_BUS_LISTENER_IMMEDIATE);
+            , this, &MicroBitIndoorBikeMiniSensor::onCrankSensor);
     switch (pin)
     {
     case EDGE_P0:

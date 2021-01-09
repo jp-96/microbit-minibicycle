@@ -47,7 +47,6 @@ static const uint16_t CUSTOM_EVENT_ID_BASE = 32768;
 #endif /* #ifndef CUSTOM_EVENT_ID_INDOORBIKE_MINI_SERVO */
 // Event Value - Resistance Level
 #define MICROBIT_INDOOR_BIKE_MINI_SERVO_EVT_DATA_CHANGED 0b0000000000000001
-#define MICROBIT_INDOOR_BIKE_MINI_SERVO_EVT_DATA_FREE    0b0000000000000010
 
 // bluetooth/MicroBitFTMIndoorBikeService
 // # Fitness Machine Control Point Procedure Requirements

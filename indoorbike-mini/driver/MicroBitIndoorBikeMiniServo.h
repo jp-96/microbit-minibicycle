@@ -47,7 +47,6 @@ enum MicrobitIndoorBikeMiniServoPin
 enum MicrobitIndoorBikeMiniServoState
 {
     SERVO_NONE,
-    SERVO_FREE,
     SERVO_ON,
     SERVO_OFF
 };
@@ -57,12 +56,13 @@ class MicroBitIndoorBikeMiniServo : public MicroBitComponent
 private:
     MicroBit &uBit;
     
-    static const uint64_t SERVO_PERIOD_ON  = 100000; // 0.1s
-    static const uint64_t SERVO_PERIOD_OFF =3000000; // 3.0s
+    //                                         654321
+    static const uint64_t SERVO_PERIOD_ON  = 10000000; // 10s
+    static const uint64_t SERVO_PERIOD_OFF = 10000000; // 10s
 
     MicroBitPin* servoPin;
     
-    uint16_t nextServoControlTimestamp;
+    uint64_t nextServoControlTimestamp;
     MicrobitIndoorBikeMiniServoState servoState;
 
 public:
@@ -85,7 +85,7 @@ public:
     uint16_t getId(void);
 
 private:
-    void update(MicrobitIndoorBikeMiniServoState force = SERVO_NONE);
+    void update(bool force = false);
 
 private:
     FuncCalcAngle pFuncCalcAngle;
@@ -94,8 +94,8 @@ private:
 
 public:
     void setTargetResistanceLevel10(uint8_t targetResistanceLevel10);
+    uint8_t getTargetResistanceLevel10(void);
     int getServoAngle(void);
-    void setServoFree(void);
     void incrementTargetResistanceLevel10(void);
     void decrementTargetResistanceLevel10(void);
 

@@ -414,7 +414,7 @@ void MicroBitFTMIndoorBikeService::onFitnessMachineControlPoint(MicroBitEvent e)
         // # 0x11 C.14 Set Indoor Bike Simulation [SINT16, Wind Speed], [SINT16, Grade], [UINT8 CRR], [UINT8, CW]
         // #define FTMP_EVENT_VAL_OP_CODE_CPPR_11_SET_INDOOR_BIKE_SIMULATION
         // #define FTMP_EVENT_VAL_OP_CODE_CPPR_11_SET_INDOOR_BIKE_SIMULATION_CHANGED
-        // this->sendFitnessMachineStatusIndoorBikeSimulationParametersChanged();
+        //this->sendFitnessMachineStatusIndoorBikeSimulationParametersChanged();
         // (NOP)
         break;
     default:

@@ -30,6 +30,25 @@ MicroBitIndoorBikeMiniServo::MicroBitIndoorBikeMiniServo(MicroBit &_uBit, FuncCa
     : uBit(_uBit), pFuncCalcAngle(_pFuncCalcAngle)
 {
     this->servoPin = NULL;
+    switch (pin)
+    {
+    case SERVO_P0:
+        this->servoPin = &(uBit.io.P0);
+        break;
+    
+    case SERVO_P1:
+        this->servoPin = &(uBit.io.P1);
+        break;
+    
+    default:
+        this->servoPin = &(uBit.io.P2);
+        break;
+    }
+    this->id = id;
+    this->nextServoControlTimestamp = 0;
+    this->servoState = SERVO_NONE;
+    this->targetResistanceLevel10 = 0;
+    this->servoAngle = 0;
 }
 
 /**
@@ -56,7 +75,7 @@ uint16_t MicroBitIndoorBikeMiniServo::getId(void)
     return this->id;
 }
 
-void MicroBitIndoorBikeMiniServo::update(MicrobitIndoorBikeMiniServoState force)
+void MicroBitIndoorBikeMiniServo::update(bool force)
 {
     uint64_t currentTime = system_timer_current_time_us();
     if(!(status & MICROBIT_INDOOR_BIKE_MINI_SERVO_ADDED_TO_IDLE))
@@ -67,23 +86,9 @@ void MicroBitIndoorBikeMiniServo::update(MicrobitIndoorBikeMiniServoState force)
         status |= MICROBIT_INDOOR_BIKE_MINI_SERVO_ADDED_TO_IDLE;
     }
     
-    if (force!=SERVO_NONE)
+    if (force || this->servoState==SERVO_NONE)
     {
-        switch (force)
-        {
-        case SERVO_ON:
-            this->servoState = SERVO_OFF;
-            break;
-
-        case SERVO_OFF:
-            this->servoState = SERVO_ON;
-            break;
-        
-        default:
-            this->servoState = SERVO_FREE;
-            break;
-
-        }
+        this->servoState = SERVO_OFF;
         this->nextServoControlTimestamp=currentTime;
     }
     
@@ -95,19 +100,16 @@ void MicroBitIndoorBikeMiniServo::update(MicrobitIndoorBikeMiniServoState force)
             this->servoState = SERVO_OFF;
             // Schedule our next control.
             this->nextServoControlTimestamp = currentTime + this->SERVO_PERIOD_OFF;
-            servoPin->getDigitalValue(PullDown);
+            //servoPin->getDigitalValue(PullDown);
             break;
-        case SERVO_OFF:
+
+        default:
             this->servoState = SERVO_ON;
             // Schedule our next control.
             this->nextServoControlTimestamp = currentTime + this->SERVO_PERIOD_ON;
             servoPin->setServoValue(this->servoAngle);
             break;
-        default:
-            // Schedule our next control.
-            this->nextServoControlTimestamp = currentTime + this->SERVO_PERIOD_ON + this->SERVO_PERIOD_OFF;
-            servoPin->getDigitalValue(PullDown);
-            break;
+            
         }
     }
 }
@@ -159,10 +161,15 @@ void MicroBitIndoorBikeMiniServo::setTargetResistanceLevel10(uint8_t targetResis
             }
         }
         
-        this->update(SERVO_ON);
+        this->update(true);
         new MicroBitEvent(this->id
                 , MICROBIT_INDOOR_BIKE_MINI_SERVO_EVT_DATA_CHANGED);
     }
+}
+
+uint8_t MicroBitIndoorBikeMiniServo::getTargetResistanceLevel10(void)
+{
+    return this->targetResistanceLevel10;
 }
 
 int MicroBitIndoorBikeMiniServo::getServoAngle(void)
@@ -170,19 +177,12 @@ int MicroBitIndoorBikeMiniServo::getServoAngle(void)
     return this->servoAngle;
 }
 
-void MicroBitIndoorBikeMiniServo::setServoFree(void)
-{
-    this->update(SERVO_FREE);
-    new MicroBitEvent(this->id
-            , MICROBIT_INDOOR_BIKE_MINI_SERVO_EVT_DATA_FREE);
-}
-
 void MicroBitIndoorBikeMiniServo::incrementTargetResistanceLevel10(void)
 {
-    this->setTargetResistanceLevel10(this->targetResistanceLevel10 + 1);
+    this->setTargetResistanceLevel10(this->targetResistanceLevel10 + 10);
 }
 
 void MicroBitIndoorBikeMiniServo::decrementTargetResistanceLevel10(void)
 {
-    this->setTargetResistanceLevel10(this->targetResistanceLevel10 - 1);
+    this->setTargetResistanceLevel10(this->targetResistanceLevel10 - 10);
 }
