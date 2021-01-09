@@ -175,7 +175,7 @@ int main()
     // IdleTick
     sensor = new MicroBitIndoorBikeMiniSensor(uBit, calcIndoorBikeData);
     uBit.addIdleComponent(sensor);
-    uBit.messageBus.listen(CUSTOM_EVENT_ID_INDOORBIKE_MINI, MICROBIT_EVT_ANY, onSensorUpdate);
+    uBit.messageBus.listen(CUSTOM_EVENT_ID_INDOORBIKE_MINI_SENSOR, MICROBIT_EVT_ANY, onSensorUpdate);
 
     // FTMS
     ftms = new MicroBitFTMIndoorBikeService(*(uBit.ble), *sensor);

@@ -128,7 +128,7 @@ MicroBitFTMIndoorBikeService::MicroBitFTMIndoorBikeService(BLEDevice &_ble, Micr
     // Microbit Event listen
     if (EventModel::defaultEventBus)
     {
-        EventModel::defaultEventBus->listen(this->indoorBike.getId(), MICROBIT_INDOOR_BIKE_MINI_EVT_DATA_UPDATE
+        EventModel::defaultEventBus->listen(this->indoorBike.getId(), MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVT_DATA_UPDATE
             , this, &MicroBitFTMIndoorBikeService::indoorBikeUpdate, MESSAGE_BUS_LISTENER_IMMEDIATE);
         EventModel::defaultEventBus->listen(CUSTOM_EVENT_ID_FITNESS_MACHINE_INDOOR_BIKE_SERVICE, MICROBIT_EVT_ANY
             , this, &MicroBitFTMIndoorBikeService::onFitnessMachineControlPoint, MESSAGE_BUS_LISTENER_IMMEDIATE);
