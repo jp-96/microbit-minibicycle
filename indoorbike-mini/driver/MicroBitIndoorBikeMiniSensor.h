@@ -52,13 +52,13 @@ typedef void (*FuncCalcIndoorBikeData)(uint8_t resistanceLevel10, uint32_t crank
   */
 // Universal flags used as part of the status field
 // #define MICROBIT_COMPONENT_RUNNING		0x01
-#define MICROBIT_INDOOR_BIKE_MINI_ADDED_TO_IDLE              0x02
+#define MICROBIT_INDOOR_BIKE_MINI_SENSOR_ADDED_TO_IDLE              0x02
 
 // Coefficient of Cadence and Speed
 #define K_CRANK_CADENCE  120000000
 #define K_CRANK_SPEED   1800000000
 
-enum MicrobitInddorBikeMiniCrankSensorPin
+enum MicrobitIndoorBikeMiniCrankSensorPin
 {
     EDGE_P0 = 0,
     EDGE_P1 = 1,
@@ -79,7 +79,7 @@ private:
     
 public:
     // Constructor.
-    MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, FuncCalcIndoorBikeData _pFuncCalcIndoorBikeData = NULL, MicrobitInddorBikeMiniCrankSensorPin pin = EDGE_P2, uint16_t id = CUSTOM_EVENT_ID_INDOORBIKE_MINI);
+    MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, FuncCalcIndoorBikeData _pFuncCalcIndoorBikeData = NULL, MicrobitIndoorBikeMiniCrankSensorPin pin = EDGE_P2, uint16_t id = CUSTOM_EVENT_ID_INDOORBIKE_MINI_SENSOR);
 
     /**
       * The system timer will call this member function once the component has been added to

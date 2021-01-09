@@ -43,7 +43,7 @@ void defaultCalcIndoorBikeData(uint8_t resistanceLevel10, uint32_t crankInterval
 }
 
 // コンストラクタ
-MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, FuncCalcIndoorBikeData _pFuncCalcIndoorBikeData, MicrobitInddorBikeMiniCrankSensorPin pin, uint16_t id)
+MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, FuncCalcIndoorBikeData _pFuncCalcIndoorBikeData, MicrobitIndoorBikeMiniCrankSensorPin pin, uint16_t id)
     : uBit(_uBit), pFuncCalcIndoorBikeData(_pFuncCalcIndoorBikeData)
 {
     this->id = id;
@@ -56,7 +56,7 @@ MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, Func
 
     if (EventModel::defaultEventBus)
         EventModel::defaultEventBus->listen(MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVENT_IDs[pin], MICROBIT_PIN_EVT_RISE
-            , this, &MicroBitIndoorBikeMiniSensor::onCrankSensor, MESSAGE_BUS_LISTENER_IMMEDIATE);
+            , this, &MicroBitIndoorBikeMiniSensor::onCrankSensor);
     switch (pin)
     {
     case EDGE_P0:
@@ -128,15 +128,15 @@ int32_t  MicroBitIndoorBikeMiniSensor::getPower(void)
     return this->lastPower;
 }
 
-void MicroBitIndoorBikeMiniSensor::update()
+void MicroBitIndoorBikeMiniSensor::update(void)
 {
     uint64_t currentTime = system_timer_current_time_us();
-    if(!(status & MICROBIT_INDOOR_BIKE_MINI_ADDED_TO_IDLE))
+    if(!(status & MICROBIT_INDOOR_BIKE_MINI_SENSOR_ADDED_TO_IDLE))
     {
         // If we're running under a fiber scheduer, register ourselves for a periodic callback to keep our data up to date.
         // Otherwise, we do just do this on demand, when polled through our read() interface.
         fiber_add_idle_component(this);
-        status |= MICROBIT_INDOOR_BIKE_MINI_ADDED_TO_IDLE;
+        status |= MICROBIT_INDOOR_BIKE_MINI_SENSOR_ADDED_TO_IDLE;
     }
     
     if (currentTime >= this->updateSampleTimestamp)
@@ -172,8 +172,8 @@ void MicroBitIndoorBikeMiniSensor::update()
         //    (uint32_t)currentTime, (uint32_t)intervalNum, (uint32_t)periodTime,
         //    this->lastIntervalTime, this->lastCadence, this->lastSpeed100);
         
-        // Send an event to indicate that we'e updated our temperature.
-        MicroBitEvent e(id, MICROBIT_INDOOR_BIKE_MINI_EVT_DATA_UPDATE);
+        // Send an event to indicate that we'e updated our sensor.
+        MicroBitEvent e(id, MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVT_DATA_UPDATE);
     }
 }
 
