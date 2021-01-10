@@ -74,7 +74,7 @@ micro:bitのAボタンとBボタンで、負荷を1から8まで変更できま�
 いくつかのバーチャルライドアプリも対応していますので、試してみてください。
 
 
-# Windows10でコンパイルする方法
+# 【おまけ】 Windows10でコンパイルする方法
 
 ## ツールのインストール 
 
@@ -110,15 +110,25 @@ cd c:\workubit
 git clone https://github.com/jp-96/microbit-minibicycle
 ```
 
-## コンパイル
+## ライブラリのインポート
 
-パソコンにBBC micro:bitを接続し、例えば、Dドライブとして認識させます。   
-引き続き、コマンドプロンプトで次のコマンドを実行します。   
+コマンドプロンプトを開き、次のコマンドを実行します。     
 
 ```CommandPrompt.cmd
 C:\workubit\venv\Scripts\activate.bat
 cd c:\workubit\microbit-minibicycle
 mbedubitwin10
+
+```
+
+## コンパイル
+
+パソコンにBBC micro:bitを接続し、例えば、Dドライブとして認識させます。   
+コマンドプロンプトを開き、次のコマンドを実行します。     
+
+```CommandPrompt.cmd
+C:\workubit\venv\Scripts\activate.bat
+cd c:\workubit\microbit-minibicycle
 
 mbed compile
 copy .\BUILD\NRF51_MICROBIT\GCC_ARM\microbit-minibicycle.hex d:\
