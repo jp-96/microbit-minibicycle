@@ -47,13 +47,13 @@ void onButton(MicroBitEvent e)
     switch (e.source)
     {
     case MICROBIT_ID_BUTTON_A:
-        uBit.serial.printf("%"PRIu32", MICROBIT_ID_BUTTON_A()\r\n", (uint32_t)e.timestamp);
+        //uBit.serial.printf("%"PRIu32", MICROBIT_ID_BUTTON_A()\r\n", (uint32_t)e.timestamp);
         servo->decrementTargetResistanceLevel10();
         ftms->setTargetResistanceLevel10(servo->getTargetResistanceLevel10());
         break;
     
     case MICROBIT_ID_BUTTON_B:
-        uBit.serial.printf("%"PRIu32", MICROBIT_ID_BUTTON_B()\r\n", (uint32_t)e.timestamp);
+        //uBit.serial.printf("%"PRIu32", MICROBIT_ID_BUTTON_B()\r\n", (uint32_t)e.timestamp);
         servo->incrementTargetResistanceLevel10();
         ftms->setTargetResistanceLevel10(servo->getTargetResistanceLevel10());
         break;
@@ -65,17 +65,18 @@ void onButton(MicroBitEvent e)
 
 void onServoUpdate(MicroBitEvent e)
 {
-    uBit.serial.printf("%"PRIu32", onServoUpdate()\r\n", (uint32_t)e.timestamp);
+    //uBit.serial.printf("%"PRIu32", onServoUpdate()\r\n", (uint32_t)e.timestamp);
     uBit.display.print(ManagedString((int)servo->getTargetResistanceLevel10()/10));
 }
 
 void onSensorUpdate(MicroBitEvent e)
 {
-    uBit.serial.printf("%"PRIu32", onSensorUpdate(), ", (uint32_t)e.timestamp);
-    uBit.serial.printf("T, %"PRIu32", C, %"PRIu32", S, %"PRIu32"\r\n"
+    //uBit.serial.printf("%"PRIu32", onSensorUpdate(), ", (uint32_t)e.timestamp);
+    uBit.serial.printf("T, %"PRIu32", RPM, %"PRIu32", SPD, %"PRIu32", PWR, %"PRIu32"\r\n"
         , sensor->getIntervalTime()
         , sensor->getCadence2()/2
         , sensor->getSpeed100()
+        , sensor->getPower()
     );
 }
 
@@ -103,6 +104,7 @@ void onSetTargetResistanceLevel(MicroBitEvent e)
 void onSimulationChanged(MicroBitEvent e)
 {
     uBit.serial.printf("%"PRIu32", onSimulationChanged()\r\n", (uint32_t)e.timestamp);
+    ftms->sendFitnessMachineStatusIndoorBikeSimulationParametersChanged();
     int16_t grade100 = ftms->getGrade100();
     if (grade100<0)
     {
@@ -136,6 +138,18 @@ void onSimulationChanged(MicroBitEvent e)
     {
         ftms->setTargetResistanceLevel10(80);
     }
+}
+
+void onBleConnected(MicroBitEvent e)
+{
+    uBit.serial.printf("%"PRIu32", onBleConnected()\r\n", (uint32_t)e.timestamp);
+    onReset(e);
+}
+
+void onBleDisconnected(MicroBitEvent e)
+{
+    uBit.serial.printf("%"PRIu32", onBleDisconnected()\r\n", (uint32_t)e.timestamp);
+    onReset(e);
 }
 
 void calcIndoorBikeData(uint8_t resistanceLevel10, uint32_t crankIntervalTime, uint32_t* cadence2, uint32_t* speed100, int32_t*  power)
@@ -174,6 +188,10 @@ void init()
     uBit.messageBus.listen(CUSTOM_EVENT_ID_FITNESS_MACHINE_INDOOR_BIKE_SERVICE
         , FTMP_EVENT_VAL_OP_CODE_CPPR_11_SET_INDOOR_BIKE_SIMULATION_CHANGED, onSimulationChanged);
     
+    // BLE
+    uBit.messageBus.listen(MICROBIT_ID_BLE, MICROBIT_BLE_EVT_CONNECTED, onBleConnected);
+    uBit.messageBus.listen(MICROBIT_ID_BLE, MICROBIT_BLE_EVT_DISCONNECTED, onBleDisconnected);
+
     // 
     fiber_sleep(0);
 
