@@ -29,6 +29,7 @@ SOFTWARE.
 #include "indoorbike-mini/driver/MicroBitIndoorBikeMiniServo.h"
 #include "indoorbike-mini/driver/MicroBitIndoorBikeMiniSensor.h"
 #include "indoorbike-mini/bluetooth/MicroBitFTMIndoorBikeService.h"
+#include "WatchdogTimer/WatchdogTimer.h"
 
 #define BLE_DEVICE_LOCAL_NAME "FTMS:BIT"
 #ifndef BLE_DEVICE_LOCAL_NAME_CHENGE
@@ -40,6 +41,8 @@ MicroBit uBit;
 MicroBitIndoorBikeMiniServo* servo;
 MicroBitIndoorBikeMiniSensor* sensor;
 MicroBitFTMIndoorBikeService* ftms;
+
+WatchdogTimer watchdogTimer(3); //Watchdog timer with 3 second timeout
 
 // Recalc indoor bike data.
 void calcIndoorBikeData(uint8_t resistanceLevel10, uint32_t crankIntervalTime, uint32_t* cadence2, uint32_t* speed100, int32_t*  power)
@@ -95,6 +98,8 @@ void onSensorUpdate(MicroBitEvent e)
         , sensor->getPower()
     );
     */
+    // Kick the watchdog to reset its timer
+    watchdogTimer.kick();
 }
 
 // ID: CUSTOM_EVENT_ID_FITNESS_MACHINE_INDOOR_BIKE_SERVICE
@@ -169,7 +174,7 @@ void onBleDisconnected(MicroBitEvent e)
     onReset(e);
 }
 
-void init()
+void setup()
 {
     // BLE Appearance and LOCAL_NAME
     uBit.ble->gap().accumulateAdvertisingPayload(GapAdvertisingData::GENERIC_CYCLING);
@@ -215,6 +220,6 @@ void init()
 int main()
 {
     uBit.init();
-    create_fiber(init);
+    create_fiber(setup);
     release_fiber();
 }
