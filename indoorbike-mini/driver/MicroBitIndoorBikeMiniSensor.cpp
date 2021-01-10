@@ -52,6 +52,7 @@ MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, Func
     this->lastSpeed100=0;
     this->updateSampleTimestamp=0;
     this->nextSensorTimestamp=0;
+    this->sensorEdgeOn=false;
     this->resistanceLevel10=0;
 
     if (EventModel::defaultEventBus)
@@ -130,6 +131,11 @@ int32_t  MicroBitIndoorBikeMiniSensor::getPower(void)
 
 void MicroBitIndoorBikeMiniSensor::update(void)
 {
+    if (this->sensorEdgeOn)
+    {
+        this->sensorEdgeOn=false;
+        MicroBitEvent e(id, MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVT_DATA_DETECT);
+    }
     uint64_t currentTime = system_timer_current_time_us();
     if(!(status & MICROBIT_INDOOR_BIKE_MINI_SENSOR_ADDED_TO_IDLE))
     {
@@ -184,6 +190,7 @@ void MicroBitIndoorBikeMiniSensor::onCrankSensor(MicroBitEvent e)
     {
         this->nextSensorTimestamp = e.timestamp + this->SENSOR_DATA_PACKET_PERIOD;
         this->setCurrentTimeOnCrankSignal(e.timestamp);
+        this->sensorEdgeOn=true;
     }
 }
 

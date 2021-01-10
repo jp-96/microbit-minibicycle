@@ -41,6 +41,12 @@ MicroBitIndoorBikeMiniServo* servo;
 MicroBitIndoorBikeMiniSensor* sensor;
 MicroBitFTMIndoorBikeService* ftms;
 
+// Recalc indoor bike data.
+void calcIndoorBikeData(uint8_t resistanceLevel10, uint32_t crankIntervalTime, uint32_t* cadence2, uint32_t* speed100, int32_t*  power)
+{
+    *power = *power * 1.2;
+}
+
 // Button Event
 void onButton(MicroBitEvent e)
 {
@@ -69,22 +75,33 @@ void onServoUpdate(MicroBitEvent e)
     uBit.display.print(ManagedString((int)servo->getTargetResistanceLevel10()/10));
 }
 
+int brightness = 0;
+void onSensorDetect(MicroBitEvent e)
+{
+    //uBit.serial.printf("%"PRIu32", onSensorDetect()\r\n", (uint32_t)e.timestamp);
+    uBit.display.setDisplayMode(DISPLAY_MODE_GREYSCALE);
+    brightness = ++brightness % 2;
+    uBit.display.setBrightness(255-brightness*200);
+}
+
 void onSensorUpdate(MicroBitEvent e)
 {
-    //uBit.serial.printf("%"PRIu32", onSensorUpdate(), ", (uint32_t)e.timestamp);
+    /*
+    uBit.serial.printf("%"PRIu32", onSensorUpdate(), ", (uint32_t)e.timestamp);
     uBit.serial.printf("T, %"PRIu32", RPM, %"PRIu32", SPD, %"PRIu32", PWR, %"PRIu32"\r\n"
         , sensor->getIntervalTime()
         , sensor->getCadence2()/2
         , sensor->getSpeed100()
         , sensor->getPower()
     );
+    */
 }
 
 // ID: CUSTOM_EVENT_ID_FITNESS_MACHINE_INDOOR_BIKE_SERVICE
 // VAL: FTMP_EVENT_VAL_OP_CODE_CPPR_01_RESET
 void onReset(MicroBitEvent e)
 {
-    uBit.serial.printf("%"PRIu32", onReset()\r\n", (uint32_t)e.timestamp);
+    //uBit.serial.printf("%"PRIu32", onReset()\r\n", (uint32_t)e.timestamp);
     ftms->setTargetResistanceLevel10(20);
 }
 
@@ -92,7 +109,7 @@ void onReset(MicroBitEvent e)
 // VAL: FTMP_EVENT_VAL_OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL
 void onSetTargetResistanceLevel(MicroBitEvent e)
 {
-    uBit.serial.printf("%"PRIu32", onSetTargetResistanceLevel()\r\n", (uint32_t)e.timestamp);
+    //uBit.serial.printf("%"PRIu32", onSetTargetResistanceLevel()\r\n", (uint32_t)e.timestamp);
     uint8_t lv10 = ftms->getTargetResistanceLevel10();
     servo->setTargetResistanceLevel10(lv10);
     ftms->sendFitnessMachineStatusTargetResistanceLevelChanged();
@@ -103,7 +120,7 @@ void onSetTargetResistanceLevel(MicroBitEvent e)
 // VAL: FTMP_EVENT_VAL_OP_CODE_CPPR_11_SET_INDOOR_BIKE_SIMULATION_CHANGED
 void onSimulationChanged(MicroBitEvent e)
 {
-    uBit.serial.printf("%"PRIu32", onSimulationChanged()\r\n", (uint32_t)e.timestamp);
+    //uBit.serial.printf("%"PRIu32", onSimulationChanged()\r\n", (uint32_t)e.timestamp);
     ftms->sendFitnessMachineStatusIndoorBikeSimulationParametersChanged();
     int16_t grade100 = ftms->getGrade100();
     if (grade100<0)
@@ -142,19 +159,14 @@ void onSimulationChanged(MicroBitEvent e)
 
 void onBleConnected(MicroBitEvent e)
 {
-    uBit.serial.printf("%"PRIu32", onBleConnected()\r\n", (uint32_t)e.timestamp);
+    //uBit.serial.printf("%"PRIu32", onBleConnected()\r\n", (uint32_t)e.timestamp);
     onReset(e);
 }
 
 void onBleDisconnected(MicroBitEvent e)
 {
-    uBit.serial.printf("%"PRIu32", onBleDisconnected()\r\n", (uint32_t)e.timestamp);
+    //uBit.serial.printf("%"PRIu32", onBleDisconnected()\r\n", (uint32_t)e.timestamp);
     onReset(e);
-}
-
-void calcIndoorBikeData(uint8_t resistanceLevel10, uint32_t crankIntervalTime, uint32_t* cadence2, uint32_t* speed100, int32_t*  power)
-{
-    *power = *power * 1.5;
 }
 
 void init()
@@ -177,8 +189,9 @@ void init()
     //uBit.addIdleComponent(servo);
     uBit.addIdleComponent(sensor);
     uBit.messageBus.listen(CUSTOM_EVENT_ID_INDOORBIKE_MINI_SERVO, MICROBIT_EVT_ANY, onServoUpdate);
-    uBit.messageBus.listen(CUSTOM_EVENT_ID_INDOORBIKE_MINI_SENSOR, MICROBIT_EVT_ANY, onSensorUpdate);
-
+    uBit.messageBus.listen(CUSTOM_EVENT_ID_INDOORBIKE_MINI_SENSOR, MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVT_DATA_DETECT, onSensorDetect);
+    uBit.messageBus.listen(CUSTOM_EVENT_ID_INDOORBIKE_MINI_SENSOR, MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVT_DATA_UPDATE, onSensorUpdate);
+    
     // FTMS
     ftms = new MicroBitFTMIndoorBikeService(*(uBit.ble), *sensor);
     uBit.messageBus.listen(CUSTOM_EVENT_ID_FITNESS_MACHINE_INDOOR_BIKE_SERVICE

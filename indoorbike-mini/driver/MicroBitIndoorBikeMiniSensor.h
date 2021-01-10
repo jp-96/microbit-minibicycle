@@ -115,6 +115,9 @@ private:
     // ケイデンスセンサーのオフ待ち
     uint64_t nextSensorTimestamp;
 
+    // エッジの立ち上がり
+    bool sensorEdgeOn;
+
 private:
     
     // ケイデンスセンサー信号の計測時間を保持する。
