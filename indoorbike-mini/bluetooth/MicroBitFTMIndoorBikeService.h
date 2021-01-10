@@ -188,12 +188,12 @@ private:
     GattAttribute::Handle_t fitnessSupportedResistanceLevelRangeCharacteristicHandle;
 
     // var
-    uint8_t targetResistanceLevel10;
+    uint8_t currentTargetResistanceLevel10;
     uint8_t stopOrPause;
-    int16_t windSpeed1000;
-    int16_t grade100;
-    uint8_t crr10000;
-    uint8_t cw100;
+    int16_t lastWindSpeed1000;
+    int16_t lastGrade100;
+    uint8_t lastCrr10000;
+    uint8_t lastCw100;
     
     // for sendFitnessMachineStatusIndoorBikeSimulationParametersChanged
     uint8_t nextFitnessMachineStatusIndoorBikeSimulationParametersChanged[7];
