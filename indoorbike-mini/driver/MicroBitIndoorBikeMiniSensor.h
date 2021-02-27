@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2021 jp-96
+Copyright (c) 2021 jp-rad
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,18 +26,15 @@ SOFTWARE.
 #define MICROBIT_INDOOR_BIKE_MINI_SENSOR_H
 
 #include "MicroBit.h"
-#include "../IndoorBikeMini.h"
+#include "MicroBitCustom.h"
+#include "MicroBitCustomComponent.h"
 #include <queue>
-
-static const double K_POWER = 0.8 * (70 * 9.80665) / (360 * 0.95 * 100); // weight(70kg)
-static const double K_INCLINE_A = 0.9; // Incline(%) - a
-static const double K_INCLINE_B = 0.6; // Incline(%) - b
 
 // IndoorBikeDataの算出関数の型定義
 //
 // 負荷のレベル（範囲：10～80）
 // uint8_t resistanceLevel10
-// クランクセンサーのインターバル時間（単位: マイクロ秒 - 1秒/1000000）
+// クランクセンサーのインターバル時間（単位: マイクロ秒 - 1/1000000秒）
 // uint32_t crankIntervalTime
 // 算出されたクランク回転数（単位：rpm の 2倍）
 // uint32_t* cadence2
@@ -54,10 +51,6 @@ typedef void (*FuncCalcIndoorBikeData)(uint8_t resistanceLevel10, uint32_t crank
 // #define MICROBIT_COMPONENT_RUNNING		0x01
 #define MICROBIT_INDOOR_BIKE_MINI_SENSOR_ADDED_TO_IDLE              0x02
 
-// Coefficient of Cadence and Speed
-#define K_CRANK_CADENCE  120000000
-#define K_CRANK_SPEED   1800000000
-
 enum MicrobitIndoorBikeMiniCrankSensorPin
 {
     EDGE_P0 = 0,
@@ -67,7 +60,7 @@ enum MicrobitIndoorBikeMiniCrankSensorPin
 
 static const int MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVENT_IDs[] = {MICROBIT_ID_IO_P0, MICROBIT_ID_IO_P1, MICROBIT_ID_IO_P2};
 
-class MicroBitIndoorBikeMiniSensor : public MicroBitComponent
+class MicroBitIndoorBikeMiniSensor : public MicroBitCustomComponent
 {
 private:
     MicroBit &uBit;
@@ -82,41 +75,19 @@ public:
     MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, FuncCalcIndoorBikeData _pFuncCalcIndoorBikeData = NULL, MicrobitIndoorBikeMiniCrankSensorPin pin = EDGE_P2, uint16_t id = CUSTOM_EVENT_ID_INDOORBIKE_MINI_SENSOR);
 
     /**
-      * The system timer will call this member function once the component has been added to
-      * the array of system components using system_timer_add_component. This callback
-      * will be in interrupt context.
-      */
-    virtual void systemTick();
-
-    /**
       * Periodic callback from MicroBit idle thread.
       */
     virtual void idleTick();
 
-    // Event ID
-    uint16_t getId(void);
-
 private:
-    // ケイデンスセンサー信号の計測時間のリスト（単位: マイクロ秒 - 1秒/1000000）
+    // ケイデンスセンサー信号の計測時間のリスト（単位: マイクロ秒 - 1/1000000秒）
     std::queue<uint64_t> intervalList;
-    
-    // 最新のインターバル時間（単位: マイクロ秒 - 1秒/1000000）
-    uint32_t lastIntervalTime;
-    // 最新のクランク回転数（単位：rpm の 2倍）
-    uint32_t lastCadence2;
-    // 最新の速度（単位： km/h の 100倍）
-    uint32_t lastSpeed100;
-    // 最新のパワー（単位： ワット）
-    int32_t  lastPower;
     
     // 次のupdate実行時間
     uint64_t updateSampleTimestamp;
     
     // ケイデンスセンサーのオフ待ち
     uint64_t nextSensorTimestamp;
-
-    // エッジの立ち上がり
-    bool sensorEdgeOn;
 
 private:
     
@@ -126,9 +97,19 @@ private:
     // クランク回転数と速度を再計算する（最新化）
     void update();
 
+private:
+    // 最新のインターバル時間（単位: マイクロ秒 - 1/1000000秒）
+    uint32_t lastIntervalTime;
+    // 最新のクランク回転数（単位：rpm の 2倍）
+    uint32_t lastCadence2;
+    // 最新の速度（単位： km/h の 100倍）
+    uint32_t lastSpeed100;
+    // 最新のパワー（単位： ワット）
+    int32_t  lastPower;
+
 public:
 
-    // インターバル時間を取得する（単位: マイクロ秒 - 1秒/1000000）
+    // インターバル時間を取得する（単位: マイクロ秒 - 1/1000000秒）
     uint32_t getIntervalTime(void);
     // クランク回転数を取得する（単位：rpm の 2倍）
     uint32_t getCadence2(void);
@@ -141,11 +122,27 @@ private:
     // Indoor Bike Mini Sensor Event (Digital Input Pin)
     void onCrankSensor(MicroBitEvent);
 
+public:
+    // Coefficient of Cadence and Speed
+    static const uint64_t K_CRANK_CADENCE =  120000000;
+    static const uint64_t K_CRANK_SPEED   = 1800000000;
+
+    // https://diary.cyclekikou.net/archives/15876
+    static const double K_POWER = 0.8 * (70 * 9.80665) / (360 * 0.95 * 100); // weight(70kg)
+    static const double K_INCLINE_A = 0.9; // Incline(%) - a
+    static const double K_INCLINE_B = 0.6; // Incline(%) - b
+
+
 private:
     FuncCalcIndoorBikeData pFuncCalcIndoorBikeData;
+    
+    // 負荷のレベル（範囲：10～80） - パワーの算出用
     uint8_t resistanceLevel10;
 
+
 public:
+    // 負荷のレベルを取得・設定する（範囲：10～80）
+    uint8_t getResistanceLevel10(void);
     void setResistanceLevel10(uint8_t resistanceLevel10);
 
 };

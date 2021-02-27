@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2021 jp-96
+Copyright (c) 2021 jp-rad
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "MicroBit.h"
 #include "MicroBitIndoorBikeMiniServo.h"
 
 // Constructor.
@@ -47,18 +46,9 @@ MicroBitIndoorBikeMiniServo::MicroBitIndoorBikeMiniServo(MicroBit &_uBit, FuncCa
     this->id = id;
     this->nextServoControlTimestamp = 0;
     this->servoState = SERVO_NONE;
-    this->targetResistanceLevel10 = 0;
+    this->targetResistanceLevel10 = VAL_MINIMUM_RESISTANCE_LEVEL+1;
     this->servoAngle = 0;
-}
-
-/**
-     * The system timer will call this member function once the component has been added to
-     * the array of system components using system_timer_add_component. This callback
-     * will be in interrupt context.
-     */
-void MicroBitIndoorBikeMiniServo::systemTick()
-{
-    this->update();
+    this->setTargetResistanceLevel10(VAL_MINIMUM_RESISTANCE_LEVEL);
 }
 
 /**
@@ -67,12 +57,6 @@ void MicroBitIndoorBikeMiniServo::systemTick()
 void MicroBitIndoorBikeMiniServo::idleTick()
 {
     this->update();
-}
-
-// Event ID
-uint16_t MicroBitIndoorBikeMiniServo::getId(void)
-{
-    return this->id;
 }
 
 void MicroBitIndoorBikeMiniServo::update(bool force)

@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2021 jp-96
+Copyright (c) 2021 jp-rad
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-#include "MicroBit.h"
+
 #include "MicroBitIndoorBikeMiniSensor.h"
 
 void defaultCalcIndoorBikeData(uint8_t resistanceLevel10, uint32_t crankIntervalTime, uint32_t* cadence2, uint32_t* speed100, int32_t*  power)
@@ -35,10 +35,10 @@ void defaultCalcIndoorBikeData(uint8_t resistanceLevel10, uint32_t crankInterval
     }
     else
     {
-        *cadence2  = (uint32_t)( (uint64_t)K_CRANK_CADENCE / crankIntervalTime );
-        *speed100 = (uint32_t)( (uint64_t)K_CRANK_SPEED   / crankIntervalTime );
+        *cadence2  = (uint32_t)( MicroBitIndoorBikeMiniSensor::K_CRANK_CADENCE / crankIntervalTime );
+        *speed100 = (uint32_t)( MicroBitIndoorBikeMiniSensor::K_CRANK_SPEED   / crankIntervalTime );
         // https://diary.cyclekikou.net/archives/15876
-        *power = (int32_t)((double)(*speed100) * (K_INCLINE_A * ((double)resistanceLevel10)/10 + K_INCLINE_B) * K_POWER);
+        *power = (int32_t)( (double)(*speed100) * (MicroBitIndoorBikeMiniSensor::K_INCLINE_A * ((double)resistanceLevel10)/10 + MicroBitIndoorBikeMiniSensor::K_INCLINE_B) * MicroBitIndoorBikeMiniSensor::K_POWER);
     }
 }
 
@@ -52,8 +52,7 @@ MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, Func
     this->lastSpeed100=0;
     this->updateSampleTimestamp=0;
     this->nextSensorTimestamp=0;
-    this->sensorEdgeOn=false;
-    this->resistanceLevel10=0;
+    this->resistanceLevel10=VAL_MINIMUM_RESISTANCE_LEVEL;
 
     if (EventModel::defaultEventBus)
         EventModel::defaultEventBus->listen(MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVENT_IDs[pin], MICROBIT_PIN_EVT_RISE
@@ -74,26 +73,11 @@ MicroBitIndoorBikeMiniSensor::MicroBitIndoorBikeMiniSensor(MicroBit &_uBit, Func
 }
 
 /**
-     * The system timer will call this member function once the component has been added to
-     * the array of system components using system_timer_add_component. This callback
-     * will be in interrupt context.
-     */
-void MicroBitIndoorBikeMiniSensor::systemTick()
-{
-    this->update();
-}
-
-/**
   * Periodic callback from MicroBit idle thread.
   */
 void MicroBitIndoorBikeMiniSensor::idleTick()
 {
     this->update();
-}
-
-uint16_t MicroBitIndoorBikeMiniSensor::getId(void)
-{
-    return this->id;
 }
 
 void MicroBitIndoorBikeMiniSensor::setCurrentTimeOnCrankSignal(uint64_t currentTime)
@@ -109,6 +93,7 @@ void MicroBitIndoorBikeMiniSensor::setCurrentTimeOnCrankSignal(uint64_t currentT
         this->intervalList.pop();
     }
 }
+
 uint32_t MicroBitIndoorBikeMiniSensor::getIntervalTime(void)
 {
     return this->lastIntervalTime;
@@ -131,11 +116,6 @@ int32_t  MicroBitIndoorBikeMiniSensor::getPower(void)
 
 void MicroBitIndoorBikeMiniSensor::update(void)
 {
-    if (this->sensorEdgeOn)
-    {
-        this->sensorEdgeOn=false;
-        MicroBitEvent e(id, MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVT_DATA_DETECT);
-    }
     uint64_t currentTime = system_timer_current_time_us();
     if(!(status & MICROBIT_INDOOR_BIKE_MINI_SENSOR_ADDED_TO_IDLE))
     {
@@ -190,14 +170,5 @@ void MicroBitIndoorBikeMiniSensor::onCrankSensor(MicroBitEvent e)
     {
         this->nextSensorTimestamp = e.timestamp + this->SENSOR_DATA_PACKET_PERIOD;
         this->setCurrentTimeOnCrankSignal(e.timestamp);
-        this->sensorEdgeOn=true;
-    }
-}
-
-void MicroBitIndoorBikeMiniSensor::setResistanceLevel10(uint8_t resistanceLevel10)
-{
-    if (this->resistanceLevel10!=resistanceLevel10)
-    {
-        this->resistanceLevel10 = resistanceLevel10;
     }
 }

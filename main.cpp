@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2021 jp-96
+Copyright (c) 2021 jp-rad
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,11 +25,10 @@ SOFTWARE.
 
 #include "inttypes.h"
 #include "MicroBit.h"
-#include "IndoorBikeMini.h"
-#include "indoorbike-mini/driver/MicroBitIndoorBikeMiniServo.h"
-#include "indoorbike-mini/driver/MicroBitIndoorBikeMiniSensor.h"
-#include "indoorbike-mini/bluetooth/MicroBitFTMIndoorBikeService.h"
-#include "WatchdogTimer/WatchdogTimer.h"
+#include "MicroBitCustom.h"
+#include "MicroBitIndoorBikeMiniServo.h"
+#include "MicroBitIndoorBikeMiniSensor.h"
+#include "MicroBitIndoorBikeMiniService.h"
 
 #define BLE_DEVICE_LOCAL_NAME "FTMS:BIT"
 #ifndef BLE_DEVICE_LOCAL_NAME_CHENGE
@@ -40,9 +39,7 @@ MicroBit uBit;
 
 MicroBitIndoorBikeMiniServo* servo;
 MicroBitIndoorBikeMiniSensor* sensor;
-MicroBitFTMIndoorBikeService* ftms;
-
-WatchdogTimer watchdogTimer(3); //Watchdog timer with 3 second timeout
+MicroBitIndoorBikeMiniService* service;
 
 // Recalc indoor bike data.
 void calcIndoorBikeData(uint8_t resistanceLevel10, uint32_t crankIntervalTime, uint32_t* cadence2, uint32_t* speed100, int32_t*  power)
@@ -58,13 +55,13 @@ void onButton(MicroBitEvent e)
     case MICROBIT_ID_BUTTON_A:
         //uBit.serial.printf("%"PRIu32", MICROBIT_ID_BUTTON_A()\r\n", (uint32_t)e.timestamp);
         servo->decrementTargetResistanceLevel10();
-        ftms->setTargetResistanceLevel10(servo->getTargetResistanceLevel10());
+        //service->setTargetResistanceLevel10(servo->getTargetResistanceLevel10());
         break;
     
     case MICROBIT_ID_BUTTON_B:
         //uBit.serial.printf("%"PRIu32", MICROBIT_ID_BUTTON_B()\r\n", (uint32_t)e.timestamp);
         servo->incrementTargetResistanceLevel10();
-        ftms->setTargetResistanceLevel10(servo->getTargetResistanceLevel10());
+        //service->setTargetResistanceLevel10(servo->getTargetResistanceLevel10());
         break;
     
     default:
@@ -87,27 +84,12 @@ void onSensorDetect(MicroBitEvent e)
     uBit.display.setBrightness(255-brightness*200);
 }
 
-void onSensorUpdate(MicroBitEvent e)
-{
-    /*
-    uBit.serial.printf("%"PRIu32", onSensorUpdate(), ", (uint32_t)e.timestamp);
-    uBit.serial.printf("T, %"PRIu32", RPM, %"PRIu32", SPD, %"PRIu32", PWR, %"PRIu32"\r\n"
-        , sensor->getIntervalTime()
-        , sensor->getCadence2()/2
-        , sensor->getSpeed100()
-        , sensor->getPower()
-    );
-    */
-    // Kick the watchdog to reset its timer
-    watchdogTimer.kick();
-}
-
 // ID: CUSTOM_EVENT_ID_FITNESS_MACHINE_INDOOR_BIKE_SERVICE
 // VAL: FTMP_EVENT_VAL_OP_CODE_CPPR_01_RESET
 void onReset(MicroBitEvent e)
 {
     //uBit.serial.printf("%"PRIu32", onReset()\r\n", (uint32_t)e.timestamp);
-    ftms->setTargetResistanceLevel10(20);
+    service->setTargetResistanceLevel10(20);
 }
 
 // ID: CUSTOM_EVENT_ID_FITNESS_MACHINE_INDOOR_BIKE_SERVICE
@@ -115,9 +97,9 @@ void onReset(MicroBitEvent e)
 void onSetTargetResistanceLevel(MicroBitEvent e)
 {
     //uBit.serial.printf("%"PRIu32", onSetTargetResistanceLevel()\r\n", (uint32_t)e.timestamp);
-    uint8_t lv10 = ftms->getTargetResistanceLevel10();
+    uint8_t lv10 = service->getTargetResistanceLevel10();
     servo->setTargetResistanceLevel10(lv10);
-    ftms->sendFitnessMachineStatusTargetResistanceLevelChanged();
+    service->sendFitnessMachineStatusTargetResistanceLevelChanged();
     //uBit.serial.printf("Servo Angle: %d\r\n", servo->getServoAngle());
 }
 
@@ -126,39 +108,39 @@ void onSetTargetResistanceLevel(MicroBitEvent e)
 void onSimulationChanged(MicroBitEvent e)
 {
     //uBit.serial.printf("%"PRIu32", onSimulationChanged()\r\n", (uint32_t)e.timestamp);
-    ftms->sendFitnessMachineStatusIndoorBikeSimulationParametersChanged();
-    int16_t grade100 = ftms->getGrade100();
+    service->sendFitnessMachineStatusIndoorBikeSimulationParametersChanged();
+    int16_t grade100 = service->getGrade100();
     if (grade100<0)
     {
-        ftms->setTargetResistanceLevel10(10);
+        service->setTargetResistanceLevel10(10);
     }
     else if (grade100<100)
     {
-        ftms->setTargetResistanceLevel10(20);
+        service->setTargetResistanceLevel10(20);
     }
     else if (grade100<150)
     {
-        ftms->setTargetResistanceLevel10(30);
+        service->setTargetResistanceLevel10(30);
     }
     else if (grade100<200)
     {
-        ftms->setTargetResistanceLevel10(40);
+        service->setTargetResistanceLevel10(40);
     }
     else if (grade100<250)
     {
-        ftms->setTargetResistanceLevel10(50);
+        service->setTargetResistanceLevel10(50);
     }
     else if (grade100<300)
     {
-        ftms->setTargetResistanceLevel10(60);
+        service->setTargetResistanceLevel10(60);
     }
     else if (grade100<350)
     {
-        ftms->setTargetResistanceLevel10(70);
+        service->setTargetResistanceLevel10(70);
     }
     else
     {
-        ftms->setTargetResistanceLevel10(80);
+        service->setTargetResistanceLevel10(80);
     }
 }
 
@@ -191,30 +173,18 @@ void setup()
     // IdleTick
     servo = new MicroBitIndoorBikeMiniServo(uBit);
     sensor = new MicroBitIndoorBikeMiniSensor(uBit, calcIndoorBikeData);
-    //uBit.addIdleComponent(servo);
-    uBit.addIdleComponent(sensor);
+    //servo->idleTick();
+    sensor->idleTick();
     uBit.messageBus.listen(CUSTOM_EVENT_ID_INDOORBIKE_MINI_SERVO, MICROBIT_EVT_ANY, onServoUpdate);
     uBit.messageBus.listen(CUSTOM_EVENT_ID_INDOORBIKE_MINI_SENSOR, MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVT_DATA_DETECT, onSensorDetect);
-    uBit.messageBus.listen(CUSTOM_EVENT_ID_INDOORBIKE_MINI_SENSOR, MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVT_DATA_UPDATE, onSensorUpdate);
     
-    // FTMS
-    ftms = new MicroBitFTMIndoorBikeService(*(uBit.ble), *sensor);
-    uBit.messageBus.listen(CUSTOM_EVENT_ID_FITNESS_MACHINE_INDOOR_BIKE_SERVICE
-        , FTMP_EVENT_VAL_OP_CODE_CPPR_01_RESET, onReset);
-    uBit.messageBus.listen(CUSTOM_EVENT_ID_FITNESS_MACHINE_INDOOR_BIKE_SERVICE
-        , FTMP_EVENT_VAL_OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL, onSetTargetResistanceLevel);
-    uBit.messageBus.listen(CUSTOM_EVENT_ID_FITNESS_MACHINE_INDOOR_BIKE_SERVICE
-        , FTMP_EVENT_VAL_OP_CODE_CPPR_11_SET_INDOOR_BIKE_SIMULATION_CHANGED, onSimulationChanged);
-    
+    // MicroBitIndoorBikeMiniService
+    service = new MicroBitIndoorBikeMiniService(*(uBit.ble), *sensor, *servo);
+
     // BLE
     uBit.messageBus.listen(MICROBIT_ID_BLE, MICROBIT_BLE_EVT_CONNECTED, onBleConnected);
     uBit.messageBus.listen(MICROBIT_ID_BLE, MICROBIT_BLE_EVT_DISCONNECTED, onBleDisconnected);
 
-    // 
-    fiber_sleep(0);
-
-    servo->setTargetResistanceLevel10(20);
-    ftms->setTargetResistanceLevel10(servo->getTargetResistanceLevel10());
 }
 
 int main()

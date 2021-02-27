@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2021 jp-96
+Copyright (c) 2021 jp-rad
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,12 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef MICROBIT_FTM_INDOOR_BIKE_SERVICE_H
-#define MICROBIT_FTM_INDOOR_BIKE_SERVICE_H
+#ifndef MICROBIT_INDOOR_BIKE_MINI_SERVICE_H
+#define MICROBIT_INDOOR_BIKE_MINI_SERVICE_H
 
 #include "MicroBit.h"
-#include "../IndoorBikeMini.h"
-#include "../driver/MicroBitIndoorBikeMiniSensor.h"
+#include "MicroBitCustom.h"
+#include "MicroBitIndoorBikeMiniSensor.h"
+#include "MicroBitIndoorBikeMiniServo.h"
 
 /*
 # Bit Definitions for the Indoor Bike Data Characteristic
@@ -144,7 +145,7 @@ SOFTWARE.
 // # UINT8 Manual Mode (Quick Start)
 #define FTMP_VAL_TRAINING_STATUS_0D_MANUAL_MODE 0x0D
 
-class MicroBitFTMIndoorBikeService
+class MicroBitIndoorBikeMiniService
 {
 
 public:
@@ -154,7 +155,7 @@ public:
       * @param _ble The instance of a BLE device that we're running on.
       * @param _indoorBike An instance of MicroBitIndoorBikeMiniSensor to use as our indoor bike source.
       */
-    MicroBitFTMIndoorBikeService(BLEDevice &_ble, MicroBitIndoorBikeMiniSensor &_indoorBike);
+    MicroBitIndoorBikeMiniService(BLEDevice &_ble, MicroBitIndoorBikeMiniSensor &_sensor, MicroBitIndoorBikeMiniServo &_servo, uint16_t id = CUSTOM_EVENT_ID_FITNESS_MACHINE_INDOOR_BIKE_SERVICE);
 
     /**
       * Callback. Invoked when any of our attributes are written via BLE.
@@ -169,8 +170,12 @@ public:
 private:
     // instance
     BLEDevice &ble;
-    MicroBitIndoorBikeMiniSensor &indoorBike;
+    MicroBitIndoorBikeMiniSensor &sensor;
+    MicroBitIndoorBikeMiniServo &servo;
     
+    // Event Bus ID of this service
+    uint16_t id;
+
     // Characteristic buffer
     uint8_t indoorBikeDataCharacteristicBuffer[2+2+2+2+2];
     uint8_t fitnessMachineControlPointCharacteristicBuffer[1+2+2+1+1];
@@ -189,7 +194,6 @@ private:
 
     // var
     uint8_t currentTargetResistanceLevel10;
-    uint8_t stopOrPause;
     int16_t lastWindSpeed1000;
     int16_t lastGrade100;
     uint8_t lastCrr10000;
@@ -203,7 +207,6 @@ public:
     // getter/setter
     uint8_t getTargetResistanceLevel10(void);
     void    setTargetResistanceLevel10(uint8_t level10);
-    uint8_t getStopOrPause(void);
     int16_t getWindSpeed1000(void);
     int16_t getGrade100(void);
     uint8_t getCrr10000(void);
@@ -214,14 +217,15 @@ private:
     void sendTrainingStatusIdle(void);
     void sendTrainingStatusManualMode(void);
     void sendFitnessMachineStatusReset(void);
+
 public:
     // status message
     void sendFitnessMachineStatusTargetResistanceLevelChanged(void);
     void sendFitnessMachineStatusIndoorBikeSimulationParametersChanged(void);
 
 private:
-    void onFitnessMachineControlPoint(MicroBitEvent e);
+    void doFitnessMachineControlPoint(const GattWriteCallbackParams *params);
 
 };
 
-#endif /* #ifndef MICROBIT_FTM_INDOOR_BIKE_SERVICE_H */
+#endif /* #ifndef MICROBIT_INDOOR_BIKE_MINI_SERVICE_H */
