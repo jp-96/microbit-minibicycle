@@ -27,8 +27,7 @@ SOFTWARE.
 
 #include "MicroBit.h"
 #include "MicroBitCustom.h"
-#include "MicroBitIndoorBikeMiniSensor.h"
-#include "MicroBitIndoorBikeMiniServo.h"
+#include "MicroBitIndoorBikeMiniController.h"
 
 /*
 # Bit Definitions for the Indoor Bike Data Characteristic
@@ -153,10 +152,12 @@ public:
       * Constructor.
       * Create a representation of the IndoorBikeService
       * @param _ble The instance of a BLE device that we're running on.
-      * @param _indoorBike An instance of MicroBitIndoorBikeMiniSensor to use as our indoor bike source.
+      * @param _controller An instance of MicroBitIndoorBikeMiniController to use as our indoor bike source.
+      * @param id (option) CUSTOM_EVENT_ID_INDOORBIKE_MINI_SERVICE
       */
-    MicroBitIndoorBikeMiniService(BLEDevice &_ble, MicroBitIndoorBikeMiniSensor &_sensor, MicroBitIndoorBikeMiniServo &_servo, uint16_t id = CUSTOM_EVENT_ID_FITNESS_MACHINE_INDOOR_BIKE_SERVICE);
+    MicroBitIndoorBikeMiniService(BLEDevice &_ble, MicroBitIndoorBikeMiniController &_controller, uint16_t id = CUSTOM_EVENT_ID_INDOORBIKE_MINI_SERVICE);
 
+private:
     /**
       * Callback. Invoked when any of our attributes are written via BLE.
       */
@@ -170,8 +171,7 @@ public:
 private:
     // instance
     BLEDevice &ble;
-    MicroBitIndoorBikeMiniSensor &sensor;
-    MicroBitIndoorBikeMiniServo &servo;
+    MicroBitIndoorBikeMiniController &controller;
     
     // Event Bus ID of this service
     uint16_t id;
@@ -192,8 +192,9 @@ private:
     GattAttribute::Handle_t fitnessTrainingStatusCharacteristicHandle;
     GattAttribute::Handle_t fitnessSupportedResistanceLevelRangeCharacteristicHandle;
 
+private:
     // var
-    uint8_t currentTargetResistanceLevel10;
+    uint8_t lastTargetResistanceLevel10;
     int16_t lastWindSpeed1000;
     int16_t lastGrade100;
     uint8_t lastCrr10000;
@@ -203,28 +204,20 @@ private:
     uint8_t nextFitnessMachineStatusIndoorBikeSimulationParametersChanged[7];
     uint16_t nextFitnessMachineStatusIndoorBikeSimulationParametersChangedSize;
 
-public:
-    // getter/setter
-    uint8_t getTargetResistanceLevel10(void);
-    void    setTargetResistanceLevel10(uint8_t level10);
-    int16_t getWindSpeed1000(void);
-    int16_t getGrade100(void);
-    uint8_t getCrr10000(void);
-    uint8_t getCw100(void);
-
 private:
     // status message
     void sendTrainingStatusIdle(void);
     void sendTrainingStatusManualMode(void);
     void sendFitnessMachineStatusReset(void);
-
-public:
-    // status message
-    void sendFitnessMachineStatusTargetResistanceLevelChanged(void);
+    void sendFitnessMachineStatusTargetResistanceLevelChanged(uint8_t targetResistanceLevel10);
     void sendFitnessMachineStatusIndoorBikeSimulationParametersChanged(void);
 
 private:
     void doFitnessMachineControlPoint(const GattWriteCallbackParams *params);
+
+public:
+    bool incrementTargetResistanceLevel10(void);
+    bool decrementTargetResistanceLevel10(void);
 
 };
 

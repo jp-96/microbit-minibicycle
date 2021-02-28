@@ -25,7 +25,7 @@ SOFTWARE.
 #include "MicroBitIndoorBikeMiniServo.h"
 
 // Constructor.
-MicroBitIndoorBikeMiniServo::MicroBitIndoorBikeMiniServo(MicroBit &_uBit, FuncCalcAngle _pFuncCalcAngle, MicrobitIndoorBikeMiniServoPin pin, uint16_t id)
+MicroBitIndoorBikeMiniServo::MicroBitIndoorBikeMiniServo(MicroBit &_uBit, FuncCalcAngle _pFuncCalcAngle, MicrobitIndoorBikeMiniServoPin pin)
     : uBit(_uBit), pFuncCalcAngle(_pFuncCalcAngle)
 {
     this->servoPin = NULL;
@@ -43,10 +43,9 @@ MicroBitIndoorBikeMiniServo::MicroBitIndoorBikeMiniServo(MicroBit &_uBit, FuncCa
         this->servoPin = &(uBit.io.P2);
         break;
     }
-    this->id = id;
     this->nextServoControlTimestamp = 0;
     this->servoState = SERVO_NONE;
-    this->targetResistanceLevel10 = VAL_MINIMUM_RESISTANCE_LEVEL+1;
+    this->targetResistanceLevel10 = 0;
     this->servoAngle = 0;
     this->setTargetResistanceLevel10(VAL_MINIMUM_RESISTANCE_LEVEL);
 }
@@ -100,8 +99,7 @@ void MicroBitIndoorBikeMiniServo::update(bool force)
 
 void MicroBitIndoorBikeMiniServo::setTargetResistanceLevel10(uint8_t targetResistanceLevel10)
 {
-    if (this->targetResistanceLevel10!=targetResistanceLevel10
-        && targetResistanceLevel10 >= VAL_MINIMUM_RESISTANCE_LEVEL
+    if (targetResistanceLevel10 >= VAL_MINIMUM_RESISTANCE_LEVEL
         && targetResistanceLevel10 <= VAL_MAXIMUM_RESISTANCE_LEVEL)
     {
         this->targetResistanceLevel10=targetResistanceLevel10;
@@ -111,43 +109,41 @@ void MicroBitIndoorBikeMiniServo::setTargetResistanceLevel10(uint8_t targetResis
         }
         else
         {
-            if (this->targetResistanceLevel10<=10)     //10  40
+            if (this->targetResistanceLevel10<=10)      //10  40
             {
                 this->servoAngle = 40;
             }
-            else if(this->targetResistanceLevel10<=20) //20  60
+            else if(this->targetResistanceLevel10<=20)  //20  60
             {
                 this->servoAngle = 60;
             }
-            else if(this->targetResistanceLevel10<=30) //30  70
+            else if(this->targetResistanceLevel10<=30)  //30  70
             {
                 this->servoAngle = 70;
             }
-            else if(this->targetResistanceLevel10<=40) //40  80
+            else if(this->targetResistanceLevel10<=40)  //40  80
             {
                 this->servoAngle = 80;
             }
-            else if(this->targetResistanceLevel10<=50) //50  85
+            else if(this->targetResistanceLevel10<=50)  //50  85
             {
                 this->servoAngle = 85;
             }
-            else if(this->targetResistanceLevel10<=60) //60  90
+            else if(this->targetResistanceLevel10<=60)  //60  90
             {
                 this->servoAngle = 90;
             }
-            else if(this->targetResistanceLevel10<=70) //70  95
+            else if(this->targetResistanceLevel10<=70)  //70  95
             {
                 this->servoAngle = 95;
             }
-            else              //80 100
+            else                                        //80 100
             {
                 this->servoAngle =100;
             }
         }
         
         this->update(true);
-        new MicroBitEvent(this->id
-                , MICROBIT_INDOOR_BIKE_MINI_SERVO_EVT_DATA_CHANGED);
     }
 }
 
@@ -156,17 +152,3 @@ uint8_t MicroBitIndoorBikeMiniServo::getTargetResistanceLevel10(void)
     return this->targetResistanceLevel10;
 }
 
-int MicroBitIndoorBikeMiniServo::getServoAngle(void)
-{
-    return this->servoAngle;
-}
-
-void MicroBitIndoorBikeMiniServo::incrementTargetResistanceLevel10(void)
-{
-    this->setTargetResistanceLevel10(this->targetResistanceLevel10 + 10);
-}
-
-void MicroBitIndoorBikeMiniServo::decrementTargetResistanceLevel10(void)
-{
-    this->setTargetResistanceLevel10(this->targetResistanceLevel10 - 10);
-}

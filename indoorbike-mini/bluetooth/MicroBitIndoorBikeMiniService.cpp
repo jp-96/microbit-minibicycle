@@ -21,14 +21,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
 #include "MicroBitIndoorBikeMiniService.h"
 #include "struct.h"
 
-MicroBitIndoorBikeMiniService::MicroBitIndoorBikeMiniService(BLEDevice &_ble, MicroBitIndoorBikeMiniSensor &_sensor, MicroBitIndoorBikeMiniServo &_servo, uint16_t id)
-    : ble(_ble), sensor(_sensor), servo(_servo)
+// Constructor
+MicroBitIndoorBikeMiniService::MicroBitIndoorBikeMiniService(BLEDevice &_ble, MicroBitIndoorBikeMiniController &_controller, uint16_t id)
+    : ble(_ble), controller(_controller)
 {
     this->id = id;
-    this->currentTargetResistanceLevel10=0;
+    this->lastTargetResistanceLevel10=0;
     this->lastWindSpeed1000=0;
     this->lastGrade100=0;
     this->lastCrr10000=0;
@@ -133,7 +135,7 @@ MicroBitIndoorBikeMiniService::MicroBitIndoorBikeMiniService(BLEDevice &_ble, Mi
     // Microbit Event listen
     if (EventModel::defaultEventBus)
     {
-        EventModel::defaultEventBus->listen(this->sensor.getId(), MICROBIT_INDOOR_BIKE_MINI_SENSOR_EVT_DATA_UPDATE
+        EventModel::defaultEventBus->listen(this->controller.getId(), MICROBIT_INDOOR_BIKE_MINI_CONTROLLER_EVT_DATA_UPDATE
             , this, &MicroBitIndoorBikeMiniService::indoorBikeUpdate);
     }
 
@@ -143,7 +145,7 @@ void MicroBitIndoorBikeMiniService::onDataWritten(const GattWriteCallbackParams 
 {
     if (params->handle == fitnessMachineControlPointCharacteristicHandle && params->len >= 1)
     {
-        doFitnessMachineControlPoint(params);
+        this->doFitnessMachineControlPoint(params);
     }
 }
 
@@ -151,14 +153,14 @@ void MicroBitIndoorBikeMiniService::indoorBikeUpdate(MicroBitEvent e)
 {
     if (ble.getGapState().connected)
     {
-        if (e.source==this->sensor.getId())
+        if (e.source==this->controller.getId())
         {
             struct_pack(indoorBikeDataCharacteristicBuffer, "<HHHhh",
                 FTMP_FLAGS_INDOOR_BIKE_DATA_CHAR,
-                this->sensor.getSpeed100(),
-                this->sensor.getCadence2(),
-                (int16_t)(this->getTargetResistanceLevel10()/10),
-                this->sensor.getPower()
+                this->controller.getSpeed100(),
+                this->controller.getCadence2(),
+                (int16_t)(this->controller.getTargetResistanceLevel10()/10),
+                this->controller.getPower()
             );
             ble.gattServer().notify(indoorBikeDataCharacteristicHandle
                 , (uint8_t *)&indoorBikeDataCharacteristicBuffer, sizeof(indoorBikeDataCharacteristicBuffer));
@@ -166,82 +168,56 @@ void MicroBitIndoorBikeMiniService::indoorBikeUpdate(MicroBitEvent e)
     }
 }
 
-uint8_t MicroBitIndoorBikeMiniService::getTargetResistanceLevel10()
-{
-    return this->currentTargetResistanceLevel10;
-}
-
-void MicroBitIndoorBikeMiniService::setTargetResistanceLevel10(uint8_t level10)
-{
-    if (this->currentTargetResistanceLevel10!=level10
-        && level10 >= VAL_MINIMUM_RESISTANCE_LEVEL
-        && level10 <= VAL_MAXIMUM_RESISTANCE_LEVEL)
-    {
-        this->currentTargetResistanceLevel10 = level10;
-        //this->indoorBike.setResistanceLevel10(level10);
-    }
-}
-
-int16_t MicroBitIndoorBikeMiniService::getWindSpeed1000(void)
-{
-    return this->lastWindSpeed1000;
-}
-
-int16_t MicroBitIndoorBikeMiniService::getGrade100(void)
-{
-    return this->lastGrade100;
-}
-
-uint8_t MicroBitIndoorBikeMiniService::getCrr10000(void)
-{
-    return this->lastCrr10000;
-}
-
-uint8_t MicroBitIndoorBikeMiniService::getCw100(void)
-{
-    return this->lastCw100;
-}
-
-
 void MicroBitIndoorBikeMiniService::sendTrainingStatusIdle(void)
 {
-    static const uint8_t buff[]={FTMP_FLAGS_TRAINING_STATUS_FIELD_00_STATUS_ONLY, FTMP_VAL_TRAINING_STATUS_01_IDEL};
-    ble.gattServer().notify(this->fitnessTrainingStatusCharacteristicHandle
-        , (uint8_t *)&buff, sizeof(buff));
+    if (ble.getGapState().connected)
+    {
+        static const uint8_t buff[]={FTMP_FLAGS_TRAINING_STATUS_FIELD_00_STATUS_ONLY, FTMP_VAL_TRAINING_STATUS_01_IDEL};
+        ble.gattServer().notify(this->fitnessTrainingStatusCharacteristicHandle
+            , (uint8_t *)&buff, sizeof(buff));
+    }
 }
 
 void MicroBitIndoorBikeMiniService::sendTrainingStatusManualMode(void)
 {
-    static const uint8_t buff[]={FTMP_FLAGS_TRAINING_STATUS_FIELD_00_STATUS_ONLY, FTMP_VAL_TRAINING_STATUS_0D_MANUAL_MODE};
-    ble.gattServer().notify(this->fitnessTrainingStatusCharacteristicHandle
-        , (uint8_t *)&buff, sizeof(buff));
+    if (ble.getGapState().connected)
+    {
+        static const uint8_t buff[]={FTMP_FLAGS_TRAINING_STATUS_FIELD_00_STATUS_ONLY, FTMP_VAL_TRAINING_STATUS_0D_MANUAL_MODE};
+        ble.gattServer().notify(this->fitnessTrainingStatusCharacteristicHandle
+            , (uint8_t *)&buff, sizeof(buff));
+    }
 }
     
 void MicroBitIndoorBikeMiniService::sendFitnessMachineStatusReset(void)
 {
-    static const uint8_t buff[]={FTMP_OP_CODE_FITNESS_MACHINE_STATUS_01_RESET};
-    ble.gattServer().notify(this->fitnessTrainingStatusCharacteristicHandle
-        , (uint8_t *)&buff, sizeof(buff));
+    if (ble.getGapState().connected)
+    {
+        static const uint8_t buff[]={FTMP_OP_CODE_FITNESS_MACHINE_STATUS_01_RESET};
+        ble.gattServer().notify(this->fitnessTrainingStatusCharacteristicHandle
+            , (uint8_t *)&buff, sizeof(buff));
+    }
 }
 
-void MicroBitIndoorBikeMiniService::sendFitnessMachineStatusTargetResistanceLevelChanged(void)
+void MicroBitIndoorBikeMiniService::sendFitnessMachineStatusTargetResistanceLevelChanged(uint8_t targetResistanceLevel10)
 {
-    uint8_t buff[2];
-    buff[0]=FTMP_OP_CODE_FITNESS_MACHINE_STATUS_07_TARGET_RESISTANCE_LEVEL_CHANGED;
-    buff[1]=this->currentTargetResistanceLevel10;
-    ble.gattServer().notify(this->fitnessMachineStatusCharacteristicHandle
-        , (uint8_t *)&buff, sizeof(buff));
+    if (ble.getGapState().connected)
+    {
+        uint8_t buff[2];
+        buff[0]=FTMP_OP_CODE_FITNESS_MACHINE_STATUS_07_TARGET_RESISTANCE_LEVEL_CHANGED;
+        buff[1]=targetResistanceLevel10;
+        ble.gattServer().notify(this->fitnessMachineStatusCharacteristicHandle
+            , (uint8_t *)&buff, sizeof(buff));
+    }
 }
 
 void MicroBitIndoorBikeMiniService::sendFitnessMachineStatusIndoorBikeSimulationParametersChanged(void)
 {
-    if (this->nextFitnessMachineStatusIndoorBikeSimulationParametersChangedSize>0)
+    if (ble.getGapState().connected && this->nextFitnessMachineStatusIndoorBikeSimulationParametersChangedSize>0)
     {
         ble.gattServer().notify(fitnessTrainingStatusCharacteristicHandle
             , (uint8_t *)&this->nextFitnessMachineStatusIndoorBikeSimulationParametersChanged
             , this->nextFitnessMachineStatusIndoorBikeSimulationParametersChangedSize);
     }
-    
 }
 
 void MicroBitIndoorBikeMiniService::doFitnessMachineControlPoint(const GattWriteCallbackParams *params)
@@ -278,7 +254,7 @@ void MicroBitIndoorBikeMiniService::doFitnessMachineControlPoint(const GattWrite
             && params->data[1] >= VAL_MINIMUM_RESISTANCE_LEVEL
             && params->data[1] <= VAL_MAXIMUM_RESISTANCE_LEVEL)
         {
-            this->currentTargetResistanceLevel10 = params->data[1];
+            this->lastTargetResistanceLevel10 = params->data[1];
             result[0] = FTMP_RESULT_CODE_CPPR_01_SUCCESS;
         }
         break;
@@ -326,7 +302,7 @@ void MicroBitIndoorBikeMiniService::doFitnessMachineControlPoint(const GattWrite
         }
         if (result[0]==FTMP_RESULT_CODE_CPPR_01_SUCCESS)
         {
-            changedSimu = true;
+            changedSimu = false;
             // for sendFitnessMachineStatusIndoorBikeSimulationParametersChanged
             this->nextFitnessMachineStatusIndoorBikeSimulationParametersChanged[0]=FTMP_OP_CODE_FITNESS_MACHINE_STATUS_12_INDOOR_BIKE_SIMULATION_PARAMETERS_CHANGED;
             this->nextFitnessMachineStatusIndoorBikeSimulationParametersChangedSize=params->len;
@@ -360,7 +336,6 @@ void MicroBitIndoorBikeMiniService::doFitnessMachineControlPoint(const GattWrite
     default:
         result[0] = FTMP_RESULT_CODE_CPPR_02_NOT_SUPORTED;
         break;
-
     }
 
     // Response - Fitness Machine Control Point
@@ -380,8 +355,8 @@ void MicroBitIndoorBikeMiniService::doFitnessMachineControlPoint(const GattWrite
         break;
     case FTMP_OP_CODE_CPPR_04_SET_TARGET_RESISTANCE_LEVEL:
         // # 0x04 C.3 Set Target Resistance Level [UINT8, Level]
-        // this->sendFitnessMachineStatusTargetResistanceLevelChanged();
-        // (NOP)
+        this->sendFitnessMachineStatusTargetResistanceLevelChanged(this->lastTargetResistanceLevel10);
+        this->controller.setTargetResistanceLevel10(this->lastTargetResistanceLevel10);
         break;
     case FTMP_OP_CODE_CPPR_07_START_RESUME:
         // # 0x07 M Start or Resume
@@ -393,11 +368,28 @@ void MicroBitIndoorBikeMiniService::doFitnessMachineControlPoint(const GattWrite
         break;
     case FTMP_OP_CODE_CPPR_11_SET_INDOOR_BIKE_SIMULATION:
         // # 0x11 C.14 Set Indoor Bike Simulation [SINT16, Wind Speed], [SINT16, Grade], [UINT8 CRR], [UINT8, CW]
-        //this->sendFitnessMachineStatusIndoorBikeSimulationParametersChanged();
-        // (NOP)
+        if (changedSimu)
+        {
+            this->sendFitnessMachineStatusIndoorBikeSimulationParametersChanged();
+            this->controller.setIndoorBikeSimulation(this->lastWindSpeed1000, this->lastGrade100, this->lastCrr10000, this->lastCw100);
+        }
         break;
     default:
         break;
     }
     
+}
+
+bool MicroBitIndoorBikeMiniService::incrementTargetResistanceLevel10(void)
+{
+    uint8_t org = this->controller.getTargetResistanceLevel10();
+    this->controller.setTargetResistanceLevel10(this->controller.getTargetResistanceLevel10() + 10);
+    return org!=this->controller.getTargetResistanceLevel10();
+}
+
+bool MicroBitIndoorBikeMiniService::decrementTargetResistanceLevel10(void)
+{
+    uint8_t org = this->controller.getTargetResistanceLevel10();
+    this->controller.setTargetResistanceLevel10(this->controller.getTargetResistanceLevel10() - 10);
+    return org!=this->controller.getTargetResistanceLevel10();
 }

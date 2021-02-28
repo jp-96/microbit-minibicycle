@@ -67,8 +67,7 @@ private:
     MicrobitIndoorBikeMiniServoState servoState;
 
 public:
-    // Constructor.
-    MicroBitIndoorBikeMiniServo(MicroBit &_uBit, FuncCalcAngle _pFuncCalcAngle = NULL, MicrobitIndoorBikeMiniServoPin pin = SERVO_P1, uint16_t id = CUSTOM_EVENT_ID_INDOORBIKE_MINI_SERVO);
+    MicroBitIndoorBikeMiniServo(MicroBit &_uBit, FuncCalcAngle _pFuncCalcAngle = NULL, MicrobitIndoorBikeMiniServoPin pin = SERVO_P1);
 
     /**
       * Periodic callback from MicroBit idle thread.
@@ -86,9 +85,6 @@ private:
 public:
     void setTargetResistanceLevel10(uint8_t targetResistanceLevel10);
     uint8_t getTargetResistanceLevel10(void);
-    int getServoAngle(void);
-    void incrementTargetResistanceLevel10(void);
-    void decrementTargetResistanceLevel10(void);
 
 };
 
