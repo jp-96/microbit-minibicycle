@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2021 jp-96
+Copyright (c) 2021 jp-rad
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,8 @@ SOFTWARE.
 #define MICROBIT_INDOOR_BIKE_MINI_SERVO_H
 
 #include "MicroBit.h"
-#include "../IndoorBikeMini.h"
+#include "MicroBitCustom.h"
+#include "MicroBitCustomComponent.h"
 
 typedef int (*FuncCalcAngle)(uint8_t targetResistanceLevel10);
 
@@ -51,7 +52,7 @@ enum MicrobitIndoorBikeMiniServoState
     SERVO_OFF
 };
 
-class MicroBitIndoorBikeMiniServo : public MicroBitComponent
+class MicroBitIndoorBikeMiniServo : public MicroBitCustomComponent
 {
 private:
     MicroBit &uBit;
@@ -66,23 +67,12 @@ private:
     MicrobitIndoorBikeMiniServoState servoState;
 
 public:
-    // Constructor.
-    MicroBitIndoorBikeMiniServo(MicroBit &_uBit, FuncCalcAngle _pFuncCalcAngle = NULL, MicrobitIndoorBikeMiniServoPin pin = SERVO_P1, uint16_t id = CUSTOM_EVENT_ID_INDOORBIKE_MINI_SERVO);
-
-    /**
-      * The system timer will call this member function once the component has been added to
-      * the array of system components using system_timer_add_component. This callback
-      * will be in interrupt context.
-      */
-    virtual void systemTick();
+    MicroBitIndoorBikeMiniServo(MicroBit &_uBit, FuncCalcAngle _pFuncCalcAngle = NULL, MicrobitIndoorBikeMiniServoPin pin = SERVO_P1);
 
     /**
       * Periodic callback from MicroBit idle thread.
       */
     virtual void idleTick();
-
-    // Event ID
-    uint16_t getId(void);
 
 private:
     void update(bool force = false);
@@ -95,9 +85,6 @@ private:
 public:
     void setTargetResistanceLevel10(uint8_t targetResistanceLevel10);
     uint8_t getTargetResistanceLevel10(void);
-    int getServoAngle(void);
-    void incrementTargetResistanceLevel10(void);
-    void decrementTargetResistanceLevel10(void);
 
 };
 
