@@ -26,10 +26,9 @@ SOFTWARE.
 #include "struct.h"
 
 // Constructor
-MicroBitIndoorBikeMiniService::MicroBitIndoorBikeMiniService(BLEDevice &_ble, MicroBitIndoorBikeMiniController &_controller, uint16_t id)
+MicroBitIndoorBikeMiniService::MicroBitIndoorBikeMiniService(BLEDevice &_ble, MicroBitIndoorBikeMiniController &_controller)
     : ble(_ble), controller(_controller)
 {
-    this->id = id;
     this->lastTargetResistanceLevel10=0;
     this->lastWindSpeed1000=0;
     this->lastGrade100=0;
@@ -378,18 +377,4 @@ void MicroBitIndoorBikeMiniService::doFitnessMachineControlPoint(const GattWrite
         break;
     }
     
-}
-
-bool MicroBitIndoorBikeMiniService::incrementTargetResistanceLevel10(void)
-{
-    uint8_t org = this->controller.getTargetResistanceLevel10();
-    this->controller.setTargetResistanceLevel10(this->controller.getTargetResistanceLevel10() + 10);
-    return org!=this->controller.getTargetResistanceLevel10();
-}
-
-bool MicroBitIndoorBikeMiniService::decrementTargetResistanceLevel10(void)
-{
-    uint8_t org = this->controller.getTargetResistanceLevel10();
-    this->controller.setTargetResistanceLevel10(this->controller.getTargetResistanceLevel10() - 10);
-    return org!=this->controller.getTargetResistanceLevel10();
 }

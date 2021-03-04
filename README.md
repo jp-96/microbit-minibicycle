@@ -62,7 +62,7 @@
 # 使い方
 
 micro:bitのAボタンとBボタンで、負荷を1から8まで変更できます。  
-スマホの汎用BLEアプリで、`FTMS:BIT`に接続すると、回転数や速度、パワーを確認したり、スマホから、負荷の強度を変更できたりします。
+スマホの汎用BLEアプリで、`BIKEMINI:BIT`に接続すると、回転数や速度、パワーを確認したり、スマホから、負荷の強度を変更できたりします。
 
 **【汎用BLEアプリ】**
 
@@ -72,6 +72,22 @@ micro:bitのAボタンとBボタンで、負荷を1から8まで変更できま�
 ## バーチャルライド
 
 いくつかのバーチャルライドアプリも対応していますので、試してみてください。
+
+1. Zwift - https://www.zwift.com/
+1. Kinomap - https://www.kinomap.com/
+1. RGT CYCLING - https://www.rgtcycling.com/
+1. OneLap - https://www.onelapjapan.jp/ , https://www.onelap.com/
+
+# 開発
+
+## モジュールの構成 - シーケンス図
+
+開発当初のシーケンス図をメモとして残しておきます。実装とは異なっています。
+
+<div style="text-align: center">
+<img alt="当初のシーケンス図" src="docs/image/当初のシーケンス図.jpg" width="60%">
+</div>
+
 
 
 # 【おまけ】 Windows10でコンパイルする方法
@@ -131,6 +147,7 @@ C:\workubit\venv\Scripts\activate.bat
 cd c:\workubit\microbit-minibicycle
 
 mbed compile
+copy /Y .\BUILD\NRF51_MICROBIT\GCC_ARM\microbit-minibicycle.hex  .\docs\build
 copy .\BUILD\NRF51_MICROBIT\GCC_ARM\microbit-minibicycle.hex d:\
 ```
 

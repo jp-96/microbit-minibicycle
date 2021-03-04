@@ -43,7 +43,7 @@ MicroBitIndoorBikeMiniController* controller;
 MicroBitIndoorBikeMiniService* service;
 
 // Recalc indoor bike data.
-void calcIndoorBikeData(uint8_t resistanceLevel10, uint32_t crankIntervalTime, uint32_t* cadence2, uint32_t* speed100, int32_t*  power)
+void calcIndoorBikeData(MicroBitIndoorBikeMiniController* sender, uint8_t resistanceLevel10, uint32_t crankIntervalTime, uint32_t* cadence2, uint32_t* speed100, int32_t*  power)
 {
     *power = *power * 1.2;
 }
@@ -54,11 +54,11 @@ void onButton(MicroBitEvent e)
     switch (e.source)
     {
     case MICROBIT_ID_BUTTON_A:
-        service->decrementTargetResistanceLevel10();
+        controller->decrementTargetResistanceLevel10();
         break;
     
     case MICROBIT_ID_BUTTON_B:
-        service->incrementTargetResistanceLevel10();
+        controller->incrementTargetResistanceLevel10();
         break;
     
     default:

@@ -153,9 +153,8 @@ public:
       * Create a representation of the IndoorBikeService
       * @param _ble The instance of a BLE device that we're running on.
       * @param _controller An instance of MicroBitIndoorBikeMiniController to use as our indoor bike source.
-      * @param id (option) CUSTOM_EVENT_ID_INDOORBIKE_MINI_SERVICE
       */
-    MicroBitIndoorBikeMiniService(BLEDevice &_ble, MicroBitIndoorBikeMiniController &_controller, uint16_t id = CUSTOM_EVENT_ID_INDOORBIKE_MINI_SERVICE);
+    MicroBitIndoorBikeMiniService(BLEDevice &_ble, MicroBitIndoorBikeMiniController &_controller);
 
 private:
     /**
@@ -173,9 +172,6 @@ private:
     BLEDevice &ble;
     MicroBitIndoorBikeMiniController &controller;
     
-    // Event Bus ID of this service
-    uint16_t id;
-
     // Characteristic buffer
     uint8_t indoorBikeDataCharacteristicBuffer[2+2+2+2+2];
     uint8_t fitnessMachineControlPointCharacteristicBuffer[1+2+2+1+1];
@@ -214,10 +210,6 @@ private:
 
 private:
     void doFitnessMachineControlPoint(const GattWriteCallbackParams *params);
-
-public:
-    bool incrementTargetResistanceLevel10(void);
-    bool decrementTargetResistanceLevel10(void);
 
 };
 

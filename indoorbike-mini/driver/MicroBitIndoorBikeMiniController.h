@@ -31,7 +31,10 @@ SOFTWARE.
 #include "MicroBitIndoorBikeMiniSensor.h"
 #include "MicroBitIndoorBikeMiniServo.h"
 
-typedef void (*FuncCalcIndoorBikeData)(uint8_t resistanceLevel10, uint32_t crankIntervalTime, uint32_t* cadence2, uint32_t* speed100, int32_t*  power);
+class MicroBitIndoorBikeMiniController;
+
+typedef void (*FuncCalcIndoorBikeData)(MicroBitIndoorBikeMiniController* sender, uint8_t resistanceLevel10, uint32_t crankIntervalTime, uint32_t* cadence2, uint32_t* speed100, int32_t*  power);
+typedef uint8_t (*FuncCalcTargetResistanceLevel10)(MicroBitIndoorBikeMiniController* sender, int16_t windSpeed1000, int16_t grade100, uint8_t crr10000, uint8_t cw100);
 
 /**
   * Status flags
@@ -60,7 +63,7 @@ public:
       * @param _pFuncCalcIndoorBikeData (option) A function pointer of calc Indoor Bike Data.
       * @param id (option) CUSTOM_EVENT_ID_INDOORBIKE_MINI_CONTROLLER
       */
-    MicroBitIndoorBikeMiniController(MicroBit &_uBit, MicroBitIndoorBikeMiniSensor &_sensor, MicroBitIndoorBikeMiniServo &_servo, FuncCalcIndoorBikeData _pFuncCalcIndoorBikeData = NULL, uint16_t id = CUSTOM_EVENT_ID_INDOORBIKE_MINI_CONTROLLER);
+    MicroBitIndoorBikeMiniController(MicroBit &_uBit, MicroBitIndoorBikeMiniSensor &_sensor, MicroBitIndoorBikeMiniServo &_servo, FuncCalcIndoorBikeData _pFuncCalcIndoorBikeData = NULL, FuncCalcTargetResistanceLevel10 _pFuncCalcTargetResistanceLevel10 = NULL, uint16_t id = CUSTOM_EVENT_ID_INDOORBIKE_MINI_CONTROLLER);
 
     /**
       * Periodic callback from MicroBit idle thread.
@@ -70,6 +73,7 @@ public:
 private:
     uint64_t updateSampleTimestamp;
     FuncCalcIndoorBikeData pFuncCalcIndoorBikeData;
+    FuncCalcTargetResistanceLevel10 pFuncCalcTargetResistanceLevel10;
     void update();
 
 public:
@@ -95,6 +99,8 @@ public:
 public:
     uint8_t getTargetResistanceLevel10(void);
     void setTargetResistanceLevel10(uint8_t resistanceLevel10);
+    bool incrementTargetResistanceLevel10(void);
+    bool decrementTargetResistanceLevel10(void);
 
     void setIndoorBikeSimulation(int16_t windSpeed1000, int16_t grade100, uint8_t crr10000, uint8_t cw100);
 };

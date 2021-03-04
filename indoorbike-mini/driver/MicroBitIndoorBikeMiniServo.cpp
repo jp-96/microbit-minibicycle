@@ -46,7 +46,7 @@ MicroBitIndoorBikeMiniServo::MicroBitIndoorBikeMiniServo(MicroBit &_uBit, FuncCa
     this->nextServoControlTimestamp = 0;
     this->servoState = SERVO_NONE;
     this->targetResistanceLevel10 = 0;
-    this->servoAngle = 0;
+    this->servoAngle = MICROBIT_INDOOR_BIKE_MINI_SERVO_ANGLE_10;
     this->setTargetResistanceLevel10(VAL_MINIMUM_RESISTANCE_LEVEL);
 }
 
@@ -102,47 +102,48 @@ void MicroBitIndoorBikeMiniServo::setTargetResistanceLevel10(uint8_t targetResis
     if (targetResistanceLevel10 >= VAL_MINIMUM_RESISTANCE_LEVEL
         && targetResistanceLevel10 <= VAL_MAXIMUM_RESISTANCE_LEVEL)
     {
+        int angle;
         this->targetResistanceLevel10=targetResistanceLevel10;
         if (this->pFuncCalcAngle)
         {
-            this->servoAngle = (*this->pFuncCalcAngle)(this->targetResistanceLevel10);
+            angle = (*this->pFuncCalcAngle)(this->targetResistanceLevel10);
         }
         else
         {
             if (this->targetResistanceLevel10<=10)      //10  40
             {
-                this->servoAngle = 40;
+                angle = MICROBIT_INDOOR_BIKE_MINI_SERVO_ANGLE_10;
             }
             else if(this->targetResistanceLevel10<=20)  //20  60
             {
-                this->servoAngle = 60;
+                angle = MICROBIT_INDOOR_BIKE_MINI_SERVO_ANGLE_20;
             }
             else if(this->targetResistanceLevel10<=30)  //30  70
             {
-                this->servoAngle = 70;
+                angle = MICROBIT_INDOOR_BIKE_MINI_SERVO_ANGLE_30;
             }
             else if(this->targetResistanceLevel10<=40)  //40  80
             {
-                this->servoAngle = 80;
+                angle = MICROBIT_INDOOR_BIKE_MINI_SERVO_ANGLE_40;
             }
             else if(this->targetResistanceLevel10<=50)  //50  85
             {
-                this->servoAngle = 85;
+                angle = MICROBIT_INDOOR_BIKE_MINI_SERVO_ANGLE_50;
             }
             else if(this->targetResistanceLevel10<=60)  //60  90
             {
-                this->servoAngle = 90;
+                angle = MICROBIT_INDOOR_BIKE_MINI_SERVO_ANGLE_60;
             }
             else if(this->targetResistanceLevel10<=70)  //70  95
             {
-                this->servoAngle = 95;
+                angle = MICROBIT_INDOOR_BIKE_MINI_SERVO_ANGLE_70;
             }
             else                                        //80 100
             {
-                this->servoAngle =100;
+                angle = MICROBIT_INDOOR_BIKE_MINI_SERVO_ANGLE_80;
             }
         }
-        
+        this->servoAngle = angle;
         this->update(true);
     }
 }

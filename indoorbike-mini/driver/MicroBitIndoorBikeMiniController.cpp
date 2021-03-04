@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include "MicroBitIndoorBikeMiniController.h"
 
-void defaultCalcIndoorBikeData(uint8_t resistanceLevel10, uint32_t crankIntervalTime, uint32_t* cadence2, uint32_t* speed100, int32_t*  power)
+void defaultCalcIndoorBikeData(MicroBitIndoorBikeMiniController* sender, uint8_t resistanceLevel10, uint32_t crankIntervalTime, uint32_t* cadence2, uint32_t* speed100, int32_t*  power)
 {
     
     if (crankIntervalTime==0)
@@ -42,8 +42,47 @@ void defaultCalcIndoorBikeData(uint8_t resistanceLevel10, uint32_t crankInterval
     }
 }
 
-MicroBitIndoorBikeMiniController::MicroBitIndoorBikeMiniController(MicroBit &_uBit, MicroBitIndoorBikeMiniSensor &_sensor, MicroBitIndoorBikeMiniServo &_servo, FuncCalcIndoorBikeData _pFuncCalcIndoorBikeData, uint16_t id)
-    : uBit(_uBit), sensor(_sensor), servo(_servo), pFuncCalcIndoorBikeData(_pFuncCalcIndoorBikeData)
+uint8_t defaultCalcTargetResistanceLevel10(MicroBitIndoorBikeMiniController* sender, int16_t windSpeed1000, int16_t grade100, uint8_t crr10000, uint8_t cw100)
+{
+    uint8_t resistanceLevel10;
+    if (grade100<-100)
+    {
+        resistanceLevel10 = 10;
+    }
+    else if (grade100<100)
+    {
+        resistanceLevel10 = 20;
+    }
+    else if (grade100<300)
+    {
+        resistanceLevel10 = 30;
+    }
+    else if (grade100<500)
+    {
+        resistanceLevel10 = 40;
+    }
+    else if (grade100<700)
+    {
+        resistanceLevel10 = 50;
+    }
+    else if (grade100<900)
+    {
+        resistanceLevel10 = 60;
+    }
+    else if (grade100<1100)
+    {
+        resistanceLevel10 = 70;
+    }
+    else
+    {
+        resistanceLevel10 = 80;
+    }
+    return resistanceLevel10;
+}
+
+
+MicroBitIndoorBikeMiniController::MicroBitIndoorBikeMiniController(MicroBit &_uBit, MicroBitIndoorBikeMiniSensor &_sensor, MicroBitIndoorBikeMiniServo &_servo, FuncCalcIndoorBikeData _pFuncCalcIndoorBikeData, FuncCalcTargetResistanceLevel10 _pFuncCalcTargetResistanceLevel10, uint16_t id)
+    : uBit(_uBit), sensor(_sensor), servo(_servo), pFuncCalcIndoorBikeData(_pFuncCalcIndoorBikeData), pFuncCalcTargetResistanceLevel10(_pFuncCalcTargetResistanceLevel10)
 {
     this->id = id;
     this->lastCadence2=0;
@@ -76,10 +115,10 @@ void MicroBitIndoorBikeMiniController::update(void)
         
         uint8_t resistanceLevel10 = this->servo.getTargetResistanceLevel10();
         uint32_t crankIntervalTime = this->sensor.getCrankIntervalTime();
-        defaultCalcIndoorBikeData(resistanceLevel10, crankIntervalTime, &this->lastCadence2, &this->lastSpeed100, &this->lastPower);
+        defaultCalcIndoorBikeData(this, resistanceLevel10, crankIntervalTime, &this->lastCadence2, &this->lastSpeed100, &this->lastPower);
         if (this->pFuncCalcIndoorBikeData)
         {
-            (*this->pFuncCalcIndoorBikeData)(resistanceLevel10, crankIntervalTime, &this->lastCadence2, &this->lastSpeed100, &this->lastPower);
+            (*this->pFuncCalcIndoorBikeData)(this, resistanceLevel10, crankIntervalTime, &this->lastCadence2, &this->lastSpeed100, &this->lastPower);
         }
         // Send an event to indicate that we'e updated our sensor.
         MicroBitEvent e(id, MICROBIT_INDOOR_BIKE_MINI_CONTROLLER_EVT_DATA_UPDATE);
@@ -111,38 +150,30 @@ uint8_t MicroBitIndoorBikeMiniController::getTargetResistanceLevel10(void)
     return this->servo.getTargetResistanceLevel10();
 }
 
+bool MicroBitIndoorBikeMiniController::incrementTargetResistanceLevel10(void)
+{
+    uint8_t org = this->getTargetResistanceLevel10();
+    this->setTargetResistanceLevel10(this->getTargetResistanceLevel10() + VAL_INCREMENT_RESISTANCE_LEVEL);
+    return org!=this->getTargetResistanceLevel10();
+}
+
+bool MicroBitIndoorBikeMiniController::decrementTargetResistanceLevel10(void)
+{
+    uint8_t org = this->getTargetResistanceLevel10();
+    this->setTargetResistanceLevel10(this->getTargetResistanceLevel10() - VAL_INCREMENT_RESISTANCE_LEVEL);
+    return org!=this->getTargetResistanceLevel10();
+}
+
 void MicroBitIndoorBikeMiniController::setIndoorBikeSimulation(int16_t windSpeed1000, int16_t grade100, uint8_t crr10000, uint8_t cw100)
 {   
-    if (grade100<0)
+    FuncCalcTargetResistanceLevel10 pFunc;
+    if (this->pFuncCalcTargetResistanceLevel10)
     {
-        this->setTargetResistanceLevel10(10);
-    }
-    else if (grade100<100)
-    {
-        this->setTargetResistanceLevel10(20);
-    }
-    else if (grade100<150)
-    {
-        this->setTargetResistanceLevel10(30);
-    }
-    else if (grade100<200)
-    {
-        this->setTargetResistanceLevel10(40);
-    }
-    else if (grade100<250)
-    {
-        this->setTargetResistanceLevel10(50);
-    }
-    else if (grade100<300)
-    {
-        this->setTargetResistanceLevel10(60);
-    }
-    else if (grade100<350)
-    {
-        this->setTargetResistanceLevel10(70);
+        pFunc = this->pFuncCalcTargetResistanceLevel10;
     }
     else
     {
-        this->setTargetResistanceLevel10(80);
+        pFunc = defaultCalcTargetResistanceLevel10;
     }
+    this->setTargetResistanceLevel10(pFunc(this, windSpeed1000, grade100, crr10000, cw100));
 }
