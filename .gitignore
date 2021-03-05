@@ -135,5 +135,7 @@ dmypy.json
 /mbed
 /mbed-src
 /microbit
+/WatchdogTimer
 /.mbed
 /mbed.bld
+/mbed-src.lib
